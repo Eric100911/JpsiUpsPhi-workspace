@@ -1,0 +1,6 @@
+*.png
+preCut/jobs_*/*
+secCut/jobs_*/*
+*.old
+*.root
+
