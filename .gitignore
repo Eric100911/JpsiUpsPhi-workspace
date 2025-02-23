@@ -5,4 +5,5 @@ preCut/jobs_*/*
 secCut/jobs_*/*
 *.old
 *.root
-
+*.pdf
+TPS-Onia2MuMu/*

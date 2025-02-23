@@ -24,6 +24,8 @@ public :
 // Fixed size dimensions of array or collections stored in the TTree if any.
 
    // Declaration of leaf types
+   Bool_t          isJpsiTrigEvt;
+   Bool_t          isUpsTrigEvt;
    vector<float>   *Jpsi_mass;
    vector<float>   *Jpsi_massErr;
    vector<float>   *Jpsi_massDiff;
@@ -43,8 +45,6 @@ public :
    vector<float>   *Ups_mass;
    vector<float>   *Ups_massErr;
    vector<float>   *Ups_massDiff;
-   vector<float>   *Phi_ctau;
-   vector<float>   *Phi_ctauErr;
    vector<float>   *Ups_Chi2;
    vector<float>   *Ups_ndof;
    vector<float>   *Ups_VtxProb;
@@ -72,6 +72,8 @@ public :
    vector<float>   *Phi_mass;
    vector<float>   *Phi_massErr;
    vector<float>   *Phi_massDiff;
+   vector<float>   *Phi_ctau;
+   vector<float>   *Phi_ctauErr;
    vector<float>   *Phi_Chi2;
    vector<float>   *Phi_ndof;
    vector<float>   *Phi_VtxProb;
@@ -93,6 +95,8 @@ public :
    vector<int>     *Jpsi_mu_1_isPatSoftMuon;
    vector<int>     *Jpsi_mu_1_isPatMediumMuon;
    vector<int>     *Jpsi_mu_1_isPatTightMuon;
+   vector<int>     *Jpsi_mu_1_isJpsiFilterMatch;
+   vector<int>     *Jpsi_mu_1_isUpsFilterMatch;
    vector<float>   *Jpsi_mu_2_px;
    vector<float>   *Jpsi_mu_2_py;
    vector<float>   *Jpsi_mu_2_pz;
@@ -103,6 +107,8 @@ public :
    vector<int>     *Jpsi_mu_2_isPatSoftMuon;
    vector<int>     *Jpsi_mu_2_isPatMediumMuon;
    vector<int>     *Jpsi_mu_2_isPatTightMuon;
+   vector<int>     *Jpsi_mu_2_isJpsiFilterMatch;
+   vector<int>     *Jpsi_mu_2_isUpsFilterMatch;
    vector<float>   *Ups_mu_1_px;
    vector<float>   *Ups_mu_1_py;
    vector<float>   *Ups_mu_1_pz;
@@ -113,6 +119,8 @@ public :
    vector<int>     *Ups_mu_1_isPatSoftMuon;
    vector<int>     *Ups_mu_1_isPatMediumMuon;
    vector<int>     *Ups_mu_1_isPatTightMuon;
+   vector<int>     *Ups_mu_1_isJpsiFilterMatch;
+   vector<int>     *Ups_mu_1_isUpsFilterMatch;
    vector<float>   *Ups_mu_2_px;
    vector<float>   *Ups_mu_2_py;
    vector<float>   *Ups_mu_2_pz;
@@ -123,6 +131,8 @@ public :
    vector<int>     *Ups_mu_2_isPatSoftMuon;
    vector<int>     *Ups_mu_2_isPatMediumMuon;
    vector<int>     *Ups_mu_2_isPatTightMuon;
+   vector<int>     *Ups_mu_2_isJpsiFilterMatch;
+   vector<int>     *Ups_mu_2_isUpsFilterMatch;
    vector<float>   *Phi_K_1_px;
    vector<float>   *Phi_K_1_py;
    vector<float>   *Phi_K_1_pz;
@@ -137,6 +147,8 @@ public :
    vector<float>   *Phi_K_2_pt;
 
    // List of branches
+   TBranch        *b_isJpsiTrigEvt;   //!
+   TBranch        *b_isUpsTrigEvt;   //!
    TBranch        *b_Jpsi_mass;   //!
    TBranch        *b_Jpsi_massErr;   //!
    TBranch        *b_Jpsi_massDiff;   //!
@@ -156,8 +168,6 @@ public :
    TBranch        *b_Ups_mass;   //!
    TBranch        *b_Ups_massErr;   //!
    TBranch        *b_Ups_massDiff;   //!
-   TBranch        *b_Phi_ctau;   //!
-   TBranch        *b_Phi_ctauErr;   //!
    TBranch        *b_Ups_Chi2;   //!
    TBranch        *b_Ups_ndof;   //!
    TBranch        *b_Ups_VtxProb;   //!
@@ -185,6 +195,8 @@ public :
    TBranch        *b_Phi_mass;   //!
    TBranch        *b_Phi_massErr;   //!
    TBranch        *b_Phi_massDiff;   //!
+   TBranch        *b_Phi_ctau;   //!
+   TBranch        *b_Phi_ctauErr;   //!
    TBranch        *b_Phi_Chi2;   //!
    TBranch        *b_Phi_ndof;   //!
    TBranch        *b_Phi_VtxProb;   //!
@@ -206,6 +218,8 @@ public :
    TBranch        *b_Jpsi_mu_1_isPatSoftMuon;   //!
    TBranch        *b_Jpsi_mu_1_isPatMediumMuon;   //!
    TBranch        *b_Jpsi_mu_1_isPatTightMuon;   //!
+   TBranch        *b_Jpsi_mu_1_isJpsiFilterMatch;   //!
+   TBranch        *b_Jpsi_mu_1_isUpsFilterMatch;   //!
    TBranch        *b_Jpsi_mu_2_px;   //!
    TBranch        *b_Jpsi_mu_2_py;   //!
    TBranch        *b_Jpsi_mu_2_pz;   //!
@@ -216,6 +230,8 @@ public :
    TBranch        *b_Jpsi_mu_2_isPatSoftMuon;   //!
    TBranch        *b_Jpsi_mu_2_isPatMediumMuon;   //!
    TBranch        *b_Jpsi_mu_2_isPatTightMuon;   //!
+   TBranch        *b_Jpsi_mu_2_isJpsiFilterMatch;   //!
+   TBranch        *b_Jpsi_mu_2_isUpsFilterMatch;   //!
    TBranch        *b_Ups_mu_1_px;   //!
    TBranch        *b_Ups_mu_1_py;   //!
    TBranch        *b_Ups_mu_1_pz;   //!
@@ -226,6 +242,8 @@ public :
    TBranch        *b_Ups_mu_1_isPatSoftMuon;   //!
    TBranch        *b_Ups_mu_1_isPatMediumMuon;   //!
    TBranch        *b_Ups_mu_1_isPatTightMuon;   //!
+   TBranch        *b_Ups_mu_1_isJpsiFilterMatch;   //!
+   TBranch        *b_Ups_mu_1_isUpsFilterMatch;   //!
    TBranch        *b_Ups_mu_2_px;   //!
    TBranch        *b_Ups_mu_2_py;   //!
    TBranch        *b_Ups_mu_2_pz;   //!
@@ -236,6 +254,8 @@ public :
    TBranch        *b_Ups_mu_2_isPatSoftMuon;   //!
    TBranch        *b_Ups_mu_2_isPatMediumMuon;   //!
    TBranch        *b_Ups_mu_2_isPatTightMuon;   //!
+   TBranch        *b_Ups_mu_2_isJpsiFilterMatch;   //!
+   TBranch        *b_Ups_mu_2_isUpsFilterMatch;   //!
    TBranch        *b_Phi_K_1_px;   //!
    TBranch        *b_Phi_K_1_py;   //!
    TBranch        *b_Phi_K_1_pz;   //!
@@ -251,6 +271,9 @@ public :
 
    // Output tree
     TTree *filteredTree;
+
+   bool filtered_isJpsiTrigEvt;
+   bool filtered_isUpsTrigEvt;
 
    // Define the branches for the filtered data.
    std::vector<float> *filtered_Jpsi_mass;
@@ -327,6 +350,8 @@ public :
    std::vector<int>   *filtered_Jpsi_mu_1_isPatSoftMuon;
    std::vector<int>   *filtered_Jpsi_mu_1_isPatMediumMuon;
    std::vector<int>   *filtered_Jpsi_mu_1_isPatTightMuon;
+   std::vector<int>   *filtered_Jpsi_mu_1_isJpsiFilterMatch;
+   std::vector<int>   *filtered_Jpsi_mu_1_isUpsFilterMatch;
 
    std::vector<float> *filtered_Jpsi_mu_2_px;
    std::vector<float> *filtered_Jpsi_mu_2_py;
@@ -338,6 +363,8 @@ public :
    std::vector<int>   *filtered_Jpsi_mu_2_isPatSoftMuon;
    std::vector<int>   *filtered_Jpsi_mu_2_isPatMediumMuon;
    std::vector<int>   *filtered_Jpsi_mu_2_isPatTightMuon;
+    std::vector<int>   *filtered_Jpsi_mu_2_isJpsiFilterMatch;
+    std::vector<int>   *filtered_Jpsi_mu_2_isUpsFilterMatch;
 
    std::vector<float> *filtered_Ups_mu_1_px;
    std::vector<float> *filtered_Ups_mu_1_py;
@@ -349,6 +376,8 @@ public :
    std::vector<int>   *filtered_Ups_mu_1_isPatSoftMuon;
    std::vector<int>   *filtered_Ups_mu_1_isPatMediumMuon;
    std::vector<int>   *filtered_Ups_mu_1_isPatTightMuon;
+    std::vector<int>   *filtered_Ups_mu_1_isJpsiFilterMatch;
+    std::vector<int>   *filtered_Ups_mu_1_isUpsFilterMatch;
 
    std::vector<float> *filtered_Ups_mu_2_px;
    std::vector<float> *filtered_Ups_mu_2_py;
@@ -360,6 +389,8 @@ public :
    std::vector<int>   *filtered_Ups_mu_2_isPatSoftMuon;
    std::vector<int>   *filtered_Ups_mu_2_isPatMediumMuon;
    std::vector<int>   *filtered_Ups_mu_2_isPatTightMuon;
+    std::vector<int>   *filtered_Ups_mu_2_isJpsiFilterMatch;
+    std::vector<int>   *filtered_Ups_mu_2_isUpsFilterMatch;
 
    std::vector<float> *filtered_Phi_K_1_px;
    std::vector<float> *filtered_Phi_K_1_py;
@@ -406,6 +437,7 @@ secCut::secCut(TTree *tree) : fChain(0)
 
    }
    Init(tree);
+   InitFilteredTree();
 }
 
 secCut::~secCut()
@@ -463,8 +495,6 @@ void secCut::Init(TTree *tree)
    Ups_mass = 0;
    Ups_massErr = 0;
    Ups_massDiff = 0;
-   Phi_ctau = 0;
-   Phi_ctauErr = 0;
    Ups_Chi2 = 0;
    Ups_ndof = 0;
    Ups_VtxProb = 0;
@@ -492,6 +522,8 @@ void secCut::Init(TTree *tree)
    Phi_mass = 0;
    Phi_massErr = 0;
    Phi_massDiff = 0;
+   Phi_ctau = 0;
+   Phi_ctauErr = 0;
    Phi_Chi2 = 0;
    Phi_ndof = 0;
    Phi_VtxProb = 0;
@@ -513,6 +545,8 @@ void secCut::Init(TTree *tree)
    Jpsi_mu_1_isPatSoftMuon = 0;
    Jpsi_mu_1_isPatMediumMuon = 0;
    Jpsi_mu_1_isPatTightMuon = 0;
+   Jpsi_mu_1_isJpsiFilterMatch = 0;
+   Jpsi_mu_1_isUpsFilterMatch = 0;
    Jpsi_mu_2_px = 0;
    Jpsi_mu_2_py = 0;
    Jpsi_mu_2_pz = 0;
@@ -523,6 +557,8 @@ void secCut::Init(TTree *tree)
    Jpsi_mu_2_isPatSoftMuon = 0;
    Jpsi_mu_2_isPatMediumMuon = 0;
    Jpsi_mu_2_isPatTightMuon = 0;
+   Jpsi_mu_2_isJpsiFilterMatch = 0;
+   Jpsi_mu_2_isUpsFilterMatch = 0;
    Ups_mu_1_px = 0;
    Ups_mu_1_py = 0;
    Ups_mu_1_pz = 0;
@@ -533,6 +569,8 @@ void secCut::Init(TTree *tree)
    Ups_mu_1_isPatSoftMuon = 0;
    Ups_mu_1_isPatMediumMuon = 0;
    Ups_mu_1_isPatTightMuon = 0;
+   Ups_mu_1_isJpsiFilterMatch = 0;
+   Ups_mu_1_isUpsFilterMatch = 0;
    Ups_mu_2_px = 0;
    Ups_mu_2_py = 0;
    Ups_mu_2_pz = 0;
@@ -543,6 +581,8 @@ void secCut::Init(TTree *tree)
    Ups_mu_2_isPatSoftMuon = 0;
    Ups_mu_2_isPatMediumMuon = 0;
    Ups_mu_2_isPatTightMuon = 0;
+   Ups_mu_2_isJpsiFilterMatch = 0;
+   Ups_mu_2_isUpsFilterMatch = 0;
    Phi_K_1_px = 0;
    Phi_K_1_py = 0;
    Phi_K_1_pz = 0;
@@ -561,6 +601,8 @@ void secCut::Init(TTree *tree)
    fCurrent = -1;
    fChain->SetMakeClass(1);
 
+   fChain->SetBranchAddress("isJpsiTrigEvt", &isJpsiTrigEvt, &b_isJpsiTrigEvt);
+   fChain->SetBranchAddress("isUpsTrigEvt", &isUpsTrigEvt, &b_isUpsTrigEvt);
    fChain->SetBranchAddress("Jpsi_mass", &Jpsi_mass, &b_Jpsi_mass);
    fChain->SetBranchAddress("Jpsi_massErr", &Jpsi_massErr, &b_Jpsi_massErr);
    fChain->SetBranchAddress("Jpsi_massDiff", &Jpsi_massDiff, &b_Jpsi_massDiff);
@@ -580,8 +622,6 @@ void secCut::Init(TTree *tree)
    fChain->SetBranchAddress("Ups_mass", &Ups_mass, &b_Ups_mass);
    fChain->SetBranchAddress("Ups_massErr", &Ups_massErr, &b_Ups_massErr);
    fChain->SetBranchAddress("Ups_massDiff", &Ups_massDiff, &b_Ups_massDiff);
-   fChain->SetBranchAddress("Phi_ctau", &Phi_ctau, &b_Phi_ctau);
-   fChain->SetBranchAddress("Phi_ctauErr", &Phi_ctauErr, &b_Phi_ctauErr);
    fChain->SetBranchAddress("Ups_Chi2", &Ups_Chi2, &b_Ups_Chi2);
    fChain->SetBranchAddress("Ups_ndof", &Ups_ndof, &b_Ups_ndof);
    fChain->SetBranchAddress("Ups_VtxProb", &Ups_VtxProb, &b_Ups_VtxProb);
@@ -609,6 +649,8 @@ void secCut::Init(TTree *tree)
    fChain->SetBranchAddress("Phi_mass", &Phi_mass, &b_Phi_mass);
    fChain->SetBranchAddress("Phi_massErr", &Phi_massErr, &b_Phi_massErr);
    fChain->SetBranchAddress("Phi_massDiff", &Phi_massDiff, &b_Phi_massDiff);
+   fChain->SetBranchAddress("Phi_ctau", &Phi_ctau, &b_Phi_ctau);
+   fChain->SetBranchAddress("Phi_ctauErr", &Phi_ctauErr, &b_Phi_ctauErr);
    fChain->SetBranchAddress("Phi_Chi2", &Phi_Chi2, &b_Phi_Chi2);
    fChain->SetBranchAddress("Phi_ndof", &Phi_ndof, &b_Phi_ndof);
    fChain->SetBranchAddress("Phi_VtxProb", &Phi_VtxProb, &b_Phi_VtxProb);
@@ -630,6 +672,8 @@ void secCut::Init(TTree *tree)
    fChain->SetBranchAddress("Jpsi_mu_1_isPatSoftMuon", &Jpsi_mu_1_isPatSoftMuon, &b_Jpsi_mu_1_isPatSoftMuon);
    fChain->SetBranchAddress("Jpsi_mu_1_isPatMediumMuon", &Jpsi_mu_1_isPatMediumMuon, &b_Jpsi_mu_1_isPatMediumMuon);
    fChain->SetBranchAddress("Jpsi_mu_1_isPatTightMuon", &Jpsi_mu_1_isPatTightMuon, &b_Jpsi_mu_1_isPatTightMuon);
+   fChain->SetBranchAddress("Jpsi_mu_1_isJpsiFilterMatch", &Jpsi_mu_1_isJpsiFilterMatch, &b_Jpsi_mu_1_isJpsiFilterMatch);
+   fChain->SetBranchAddress("Jpsi_mu_1_isUpsFilterMatch", &Jpsi_mu_1_isUpsFilterMatch, &b_Jpsi_mu_1_isUpsFilterMatch);
    fChain->SetBranchAddress("Jpsi_mu_2_px", &Jpsi_mu_2_px, &b_Jpsi_mu_2_px);
    fChain->SetBranchAddress("Jpsi_mu_2_py", &Jpsi_mu_2_py, &b_Jpsi_mu_2_py);
    fChain->SetBranchAddress("Jpsi_mu_2_pz", &Jpsi_mu_2_pz, &b_Jpsi_mu_2_pz);
@@ -640,6 +684,8 @@ void secCut::Init(TTree *tree)
    fChain->SetBranchAddress("Jpsi_mu_2_isPatSoftMuon", &Jpsi_mu_2_isPatSoftMuon, &b_Jpsi_mu_2_isPatSoftMuon);
    fChain->SetBranchAddress("Jpsi_mu_2_isPatMediumMuon", &Jpsi_mu_2_isPatMediumMuon, &b_Jpsi_mu_2_isPatMediumMuon);
    fChain->SetBranchAddress("Jpsi_mu_2_isPatTightMuon", &Jpsi_mu_2_isPatTightMuon, &b_Jpsi_mu_2_isPatTightMuon);
+   fChain->SetBranchAddress("Jpsi_mu_2_isJpsiFilterMatch", &Jpsi_mu_2_isJpsiFilterMatch, &b_Jpsi_mu_2_isJpsiFilterMatch);
+   fChain->SetBranchAddress("Jpsi_mu_2_isUpsFilterMatch", &Jpsi_mu_2_isUpsFilterMatch, &b_Jpsi_mu_2_isUpsFilterMatch);
    fChain->SetBranchAddress("Ups_mu_1_px", &Ups_mu_1_px, &b_Ups_mu_1_px);
    fChain->SetBranchAddress("Ups_mu_1_py", &Ups_mu_1_py, &b_Ups_mu_1_py);
    fChain->SetBranchAddress("Ups_mu_1_pz", &Ups_mu_1_pz, &b_Ups_mu_1_pz);
@@ -650,6 +696,8 @@ void secCut::Init(TTree *tree)
    fChain->SetBranchAddress("Ups_mu_1_isPatSoftMuon", &Ups_mu_1_isPatSoftMuon, &b_Ups_mu_1_isPatSoftMuon);
    fChain->SetBranchAddress("Ups_mu_1_isPatMediumMuon", &Ups_mu_1_isPatMediumMuon, &b_Ups_mu_1_isPatMediumMuon);
    fChain->SetBranchAddress("Ups_mu_1_isPatTightMuon", &Ups_mu_1_isPatTightMuon, &b_Ups_mu_1_isPatTightMuon);
+   fChain->SetBranchAddress("Ups_mu_1_isJpsiFilterMatch", &Ups_mu_1_isJpsiFilterMatch, &b_Ups_mu_1_isJpsiFilterMatch);
+   fChain->SetBranchAddress("Ups_mu_1_isUpsFilterMatch", &Ups_mu_1_isUpsFilterMatch, &b_Ups_mu_1_isUpsFilterMatch);
    fChain->SetBranchAddress("Ups_mu_2_px", &Ups_mu_2_px, &b_Ups_mu_2_px);
    fChain->SetBranchAddress("Ups_mu_2_py", &Ups_mu_2_py, &b_Ups_mu_2_py);
    fChain->SetBranchAddress("Ups_mu_2_pz", &Ups_mu_2_pz, &b_Ups_mu_2_pz);
@@ -660,6 +708,8 @@ void secCut::Init(TTree *tree)
    fChain->SetBranchAddress("Ups_mu_2_isPatSoftMuon", &Ups_mu_2_isPatSoftMuon, &b_Ups_mu_2_isPatSoftMuon);
    fChain->SetBranchAddress("Ups_mu_2_isPatMediumMuon", &Ups_mu_2_isPatMediumMuon, &b_Ups_mu_2_isPatMediumMuon);
    fChain->SetBranchAddress("Ups_mu_2_isPatTightMuon", &Ups_mu_2_isPatTightMuon, &b_Ups_mu_2_isPatTightMuon);
+   fChain->SetBranchAddress("Ups_mu_2_isJpsiFilterMatch", &Ups_mu_2_isJpsiFilterMatch, &b_Ups_mu_2_isJpsiFilterMatch);
+   fChain->SetBranchAddress("Ups_mu_2_isUpsFilterMatch", &Ups_mu_2_isUpsFilterMatch, &b_Ups_mu_2_isUpsFilterMatch);
    fChain->SetBranchAddress("Phi_K_1_px", &Phi_K_1_px, &b_Phi_K_1_px);
    fChain->SetBranchAddress("Phi_K_1_py", &Phi_K_1_py, &b_Phi_K_1_py);
    fChain->SetBranchAddress("Phi_K_1_pz", &Phi_K_1_pz, &b_Phi_K_1_pz);
@@ -675,6 +725,8 @@ void secCut::Init(TTree *tree)
    Notify();
 
     // Initialize the output tree branches
+    isJpsiTrigEvt = 0;
+    isUpsTrigEvt = 0;
     filtered_Jpsi_mass = 0;
     filtered_Jpsi_massErr = 0;
     filtered_Jpsi_massDiff = 0;
@@ -749,6 +801,8 @@ void secCut::Init(TTree *tree)
     filtered_Jpsi_mu_1_isPatSoftMuon = 0;
     filtered_Jpsi_mu_1_isPatMediumMuon = 0;
     filtered_Jpsi_mu_1_isPatTightMuon = 0;
+    filtered_Jpsi_mu_1_isJpsiFilterMatch = 0;
+    filtered_Jpsi_mu_1_isUpsFilterMatch = 0;
 
     filtered_Jpsi_mu_2_px = 0;
     filtered_Jpsi_mu_2_py = 0;
@@ -760,6 +814,8 @@ void secCut::Init(TTree *tree)
     filtered_Jpsi_mu_2_isPatSoftMuon = 0;
     filtered_Jpsi_mu_2_isPatMediumMuon = 0;
     filtered_Jpsi_mu_2_isPatTightMuon = 0;
+    filtered_Jpsi_mu_2_isJpsiFilterMatch = 0;
+    filtered_Jpsi_mu_2_isUpsFilterMatch = 0;
 
     filtered_Ups_mu_1_px = 0;
     filtered_Ups_mu_1_py = 0;
@@ -771,6 +827,8 @@ void secCut::Init(TTree *tree)
     filtered_Ups_mu_1_isPatSoftMuon = 0;
     filtered_Ups_mu_1_isPatMediumMuon = 0;
     filtered_Ups_mu_1_isPatTightMuon = 0;
+    filtered_Ups_mu_1_isJpsiFilterMatch = 0;
+    filtered_Ups_mu_1_isUpsFilterMatch = 0;
 
     filtered_Ups_mu_2_px = 0;
     filtered_Ups_mu_2_py = 0;
@@ -782,6 +840,8 @@ void secCut::Init(TTree *tree)
     filtered_Ups_mu_2_isPatSoftMuon = 0;
     filtered_Ups_mu_2_isPatMediumMuon = 0;
     filtered_Ups_mu_2_isPatTightMuon = 0;
+    filtered_Ups_mu_2_isJpsiFilterMatch = 0;
+    filtered_Ups_mu_2_isUpsFilterMatch = 0;
 
     filtered_Phi_K_1_px = 0;
     filtered_Phi_K_1_py = 0;
@@ -899,6 +959,8 @@ void secCut::ClearBranches(){
     filtered_Jpsi_mu_1_isPatSoftMuon->clear();
     filtered_Jpsi_mu_1_isPatMediumMuon->clear();
     filtered_Jpsi_mu_1_isPatTightMuon->clear();
+    filtered_Jpsi_mu_1_isJpsiFilterMatch->clear();
+    filtered_Jpsi_mu_1_isUpsFilterMatch->clear();
 
     filtered_Jpsi_mu_2_px->clear();
     filtered_Jpsi_mu_2_py->clear();
@@ -910,6 +972,8 @@ void secCut::ClearBranches(){
     filtered_Jpsi_mu_2_isPatSoftMuon->clear();
     filtered_Jpsi_mu_2_isPatMediumMuon->clear();
     filtered_Jpsi_mu_2_isPatTightMuon->clear();
+    filtered_Jpsi_mu_2_isJpsiFilterMatch->clear();
+    filtered_Jpsi_mu_2_isUpsFilterMatch->clear();
 
     filtered_Ups_mu_1_px->clear();
     filtered_Ups_mu_1_py->clear();
@@ -921,6 +985,8 @@ void secCut::ClearBranches(){
     filtered_Ups_mu_1_isPatSoftMuon->clear();
     filtered_Ups_mu_1_isPatMediumMuon->clear();
     filtered_Ups_mu_1_isPatTightMuon->clear();
+    filtered_Ups_mu_1_isJpsiFilterMatch->clear();
+    filtered_Ups_mu_1_isUpsFilterMatch->clear();
 
     filtered_Ups_mu_2_px->clear();
     filtered_Ups_mu_2_py->clear();
@@ -932,6 +998,8 @@ void secCut::ClearBranches(){
     filtered_Ups_mu_2_isPatSoftMuon->clear();
     filtered_Ups_mu_2_isPatMediumMuon->clear();
     filtered_Ups_mu_2_isPatTightMuon->clear();
+    filtered_Ups_mu_2_isJpsiFilterMatch->clear();
+    filtered_Ups_mu_2_isUpsFilterMatch->clear();
 
     filtered_Phi_K_1_px->clear();
     filtered_Phi_K_1_py->clear();
@@ -1026,6 +1094,8 @@ void secCut::InitFilteredTree()
     filteredTree->Branch("Jpsi_mu_1_isPatSoftMuon", &filtered_Jpsi_mu_1_isPatSoftMuon);
     filteredTree->Branch("Jpsi_mu_1_isPatMediumMuon", &filtered_Jpsi_mu_1_isPatMediumMuon);
     filteredTree->Branch("Jpsi_mu_1_isPatTightMuon", &filtered_Jpsi_mu_1_isPatTightMuon);
+    filteredTree->Branch("Jpsi_mu_1_isJpsiFilterMatch", &filtered_Jpsi_mu_1_isJpsiFilterMatch);
+    filteredTree->Branch("Jpsi_mu_1_isUpsFilterMatch", &filtered_Jpsi_mu_1_isUpsFilterMatch);
     
     filteredTree->Branch("Jpsi_mu_2_px", &filtered_Jpsi_mu_2_px);
     filteredTree->Branch("Jpsi_mu_2_py", &filtered_Jpsi_mu_2_py);
@@ -1037,6 +1107,8 @@ void secCut::InitFilteredTree()
     filteredTree->Branch("Jpsi_mu_2_isPatSoftMuon", &filtered_Jpsi_mu_2_isPatSoftMuon);
     filteredTree->Branch("Jpsi_mu_2_isPatMediumMuon", &filtered_Jpsi_mu_2_isPatMediumMuon);
     filteredTree->Branch("Jpsi_mu_2_isPatTightMuon", &filtered_Jpsi_mu_2_isPatTightMuon);
+    filteredTree->Branch("Jpsi_mu_2_isJpsiFilterMatch", &filtered_Jpsi_mu_2_isJpsiFilterMatch);
+    filteredTree->Branch("Jpsi_mu_2_isUpsFilterMatch", &filtered_Jpsi_mu_2_isUpsFilterMatch);
 
     filteredTree->Branch("Ups_mu_1_px", &filtered_Ups_mu_1_px);
     filteredTree->Branch("Ups_mu_1_py", &filtered_Ups_mu_1_py);
@@ -1048,6 +1120,8 @@ void secCut::InitFilteredTree()
     filteredTree->Branch("Ups_mu_1_isPatSoftMuon", &filtered_Ups_mu_1_isPatSoftMuon);
     filteredTree->Branch("Ups_mu_1_isPatMediumMuon", &filtered_Ups_mu_1_isPatMediumMuon);
     filteredTree->Branch("Ups_mu_1_isPatTightMuon", &filtered_Ups_mu_1_isPatTightMuon);
+    filteredTree->Branch("Ups_mu_1_isJpsiFilterMatch", &filtered_Ups_mu_1_isJpsiFilterMatch);
+    filteredTree->Branch("Ups_mu_1_isUpsFilterMatch",  &filtered_Ups_mu_1_isUpsFilterMatch);
 
     filteredTree->Branch("Ups_mu_2_px", &filtered_Ups_mu_2_px);
     filteredTree->Branch("Ups_mu_2_py", &filtered_Ups_mu_2_py);
@@ -1059,6 +1133,8 @@ void secCut::InitFilteredTree()
     filteredTree->Branch("Ups_mu_2_isPatSoftMuon", &filtered_Ups_mu_2_isPatSoftMuon);
     filteredTree->Branch("Ups_mu_2_isPatMediumMuon", &filtered_Ups_mu_2_isPatMediumMuon);
     filteredTree->Branch("Ups_mu_2_isPatTightMuon", &filtered_Ups_mu_2_isPatTightMuon);
+    filteredTree->Branch("Ups_mu_2_isJpsiFilterMatch", &filtered_Ups_mu_2_isJpsiFilterMatch);
+    filteredTree->Branch("Ups_mu_2_isUpsFilterMatch", &filtered_Ups_mu_2_isUpsFilterMatch);
 
     filteredTree->Branch("Phi_K_1_px", &filtered_Phi_K_1_px);
     filteredTree->Branch("Phi_K_1_py", &filtered_Phi_K_1_py);

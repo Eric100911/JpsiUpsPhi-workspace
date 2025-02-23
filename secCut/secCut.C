@@ -18,6 +18,7 @@
 #include "RooChebychev.h"
 
 #define CUT_DR
+// #define SHOW_DEBUG
 
 void secCut::Loop()
 {
@@ -33,9 +34,9 @@ void secCut::Loop()
 
     // Use Roofit to draw the plot with proper error bars.
     // Define mass histograms for Jpsi, Phi and Pri passing the cut. Using Roofit.
-    RooRealVar Jpsi_mass_var("Jpsi1_mass_cut", "Jpsi1_mass_cut", 2.5, 3.5);
-    RooRealVar Ups_mass_var("Jpsi2_mass_cut", "Jpsi2_mass_cut", 2.5, 3.5);
-    RooRealVar Phi_mass_var("Phi_mass_cut","Phi_mass_cut", 8.0, 12.0);
+    RooRealVar Jpsi_mass_var("Jpsi_mass_cut", "Jpsi_mass_cut", 2.5, 3.5);
+    RooRealVar Ups_mass_var("Ups_mass_cut", "Ups_mass_cut", 8.0, 12.0);
+    RooRealVar Phi_mass_var("Phi_mass_cut","Phi_mass_cut", 0.99, 1.07);
     RooRealVar Pri_mass_var("Pri_mass_cut","Pri_mass_cut", 0.0, 100.0);
 
     // Define dataset for Jpsi, Phi and Pri passing the cut. Using Roofit.
@@ -61,11 +62,14 @@ void secCut::Loop()
     double Ups_Phi_DR_min  = 0.0;
 
     double Ups_pT_min = 6.0;
-    double Ups_mu_pT_min = 4.0;
+    double Ups_mu_pT_min = 3.5;
 
     bool Ups_mu_require_medium = true;
     bool Ups_mu_require_loose  = false;
     bool Ups_mu_require_tight  = false;
+
+    bool require_Jpsi_trig = false;
+    bool require_Ups_trig  = true;
 
 
     // --- End of cut parameters registration ---
@@ -80,8 +84,12 @@ void secCut::Loop()
 
         // Marker set to show the progress.
         if(jentry % 500 == 0){
-            printf("Processing entry %ld\n", jentry);
+            printf(">>> Processing entry %ld <<<\n", jentry);
         }
+
+        #ifdef SHOW_DEBUG
+        printf("Processing entry %ld\n", jentry);
+        #endif
 
         #ifdef TRY_E4
 
@@ -98,8 +106,20 @@ void secCut::Loop()
         ParticleCand::PartIdxList_t tempList;
         double temp_massChi2;
 
+        if(require_Jpsi_trig && !isJpsiTrigEvt){
+            continue;
+        }
+        if(require_Ups_trig && !isUpsTrigEvt){
+            continue;
+        }
+
+
         for (unsigned int iCand = 0; iCand < Jpsi_mass->size(); iCand++){
             bool passCut = true;
+
+            #ifdef SHOW_DEBUG
+            printf("Processing candidate %d\n", iCand);
+            #endif
 
             // Calculate the DRs
             double Jpsi_Ups_DR = sqrt((Jpsi_eta->at(iCand) - Ups_eta->at(iCand)) * (Jpsi_eta->at(iCand) - Ups_eta->at(iCand))
@@ -169,18 +189,24 @@ void secCut::Loop()
             tempCand.AddParticle(ParticleCand::PartType::Track, tempList);
             tempList.clear();
 
-            temp_massChi2 = (Jpsi_massDiff->at(iCand) / Jpsi_massErr->at(iCand)) * (Jpsi_massDiff->at(iCand) / Jpsi_massErr->at(iCand)) +
-                             (Ups_massDiff->at(iCand) /  Ups_massErr->at(iCand)) *  (Ups_massDiff->at(iCand) /  Ups_massErr->at(iCand)) +
-                             (Phi_massDiff->at(iCand) /  Phi_massErr->at(iCand)) *  (Phi_massDiff->at(iCand) /  Phi_massErr->at(iCand));
-
-            tempCand.SetScore(temp_massChi2);
+            // temp_massChi2 = (Jpsi_massDiff->at(iCand) / Jpsi_massErr->at(iCand)) * (Jpsi_massDiff->at(iCand) / Jpsi_massErr->at(iCand)) +
+            //                  (Ups_massDiff->at(iCand) /  Ups_massErr->at(iCand)) *  (Ups_massDiff->at(iCand) /  Ups_massErr->at(iCand)) +
+            //                  (Phi_massDiff->at(iCand) /  Phi_massErr->at(iCand)) *  (Phi_massDiff->at(iCand) /  Phi_massErr->at(iCand));
+            // tempCand.SetScore(temp_massChi2);
+            tempCand.SetScore(Pri_VtxProb->at(iCand));
             CandList.push_back(std::make_shared<ParticleCand>(tempCand));
         }
         if(CandList.size() == 0){
             continue;
         }
+        #ifdef SHOW_DEBUG
+        printf("Number of candidates: %d\n", CandList.size());
+        #endif
         // Save all filtered candidates to the tree.
         for (auto cand: CandList){
+            #ifdef SHOW_DEBUG
+            printf("Adding %d\n", cand->GetId());
+            #endif
             filtered_Jpsi_mass->push_back(Jpsi_mass->at(cand->GetId()));
             filtered_Jpsi_massErr->push_back(Jpsi_massErr->at(cand->GetId()));
             filtered_Jpsi_massDiff->push_back(Jpsi_massDiff->at(cand->GetId()));
@@ -245,6 +271,9 @@ void secCut::Loop()
             filtered_Ups_mu_2_Idx->push_back(Ups_mu_2_Idx->at(cand->GetId()));
 
             // For the muons: copy the corresponding muon information.
+            #ifdef SHOW_DEBUG
+            printf("Adding muon information\n");
+            #endif
             filtered_Jpsi_mu_1_px->push_back(Jpsi_mu_1_px->at(cand->GetId()));
             filtered_Jpsi_mu_1_py->push_back(Jpsi_mu_1_py->at(cand->GetId()));
             filtered_Jpsi_mu_1_pz->push_back(Jpsi_mu_1_pz->at(cand->GetId()));
@@ -255,6 +284,8 @@ void secCut::Loop()
             filtered_Jpsi_mu_1_isPatLooseMuon->push_back(Jpsi_mu_1_isPatLooseMuon->at(cand->GetId()));
             filtered_Jpsi_mu_1_isPatMediumMuon->push_back(Jpsi_mu_1_isPatMediumMuon->at(cand->GetId()));
             filtered_Jpsi_mu_1_isPatTightMuon->push_back(Jpsi_mu_1_isPatTightMuon->at(cand->GetId()));
+            filtered_Jpsi_mu_1_isJpsiFilterMatch->push_back(Jpsi_mu_1_isJpsiFilterMatch->at(cand->GetId()));
+            filtered_Jpsi_mu_1_isUpsFilterMatch->push_back(Jpsi_mu_1_isUpsFilterMatch->at(cand->GetId()));
 
             filtered_Jpsi_mu_2_px->push_back(Jpsi_mu_2_px->at(cand->GetId()));
             filtered_Jpsi_mu_2_py->push_back(Jpsi_mu_2_py->at(cand->GetId()));
@@ -266,6 +297,8 @@ void secCut::Loop()
             filtered_Jpsi_mu_2_isPatLooseMuon->push_back(Jpsi_mu_2_isPatLooseMuon->at(cand->GetId()));
             filtered_Jpsi_mu_2_isPatMediumMuon->push_back(Jpsi_mu_2_isPatMediumMuon->at(cand->GetId()));
             filtered_Jpsi_mu_2_isPatTightMuon->push_back(Jpsi_mu_2_isPatTightMuon->at(cand->GetId()));
+            filtered_Jpsi_mu_2_isJpsiFilterMatch->push_back(Jpsi_mu_2_isJpsiFilterMatch->at(cand->GetId()));
+            filtered_Jpsi_mu_2_isUpsFilterMatch->push_back(Jpsi_mu_2_isUpsFilterMatch->at(cand->GetId()));
 
             filtered_Ups_mu_1_px->push_back(Ups_mu_1_px->at(cand->GetId()));
             filtered_Ups_mu_1_py->push_back(Ups_mu_1_py->at(cand->GetId()));
@@ -277,6 +310,8 @@ void secCut::Loop()
             filtered_Ups_mu_1_isPatLooseMuon->push_back(Ups_mu_1_isPatLooseMuon->at(cand->GetId()));
             filtered_Ups_mu_1_isPatMediumMuon->push_back(Ups_mu_1_isPatMediumMuon->at(cand->GetId()));
             filtered_Ups_mu_1_isPatTightMuon->push_back(Ups_mu_1_isPatTightMuon->at(cand->GetId()));
+            filtered_Ups_mu_1_isUpsFilterMatch->push_back(Ups_mu_1_isUpsFilterMatch->at(cand->GetId()));
+            filtered_Ups_mu_1_isJpsiFilterMatch->push_back(Ups_mu_1_isJpsiFilterMatch->at(cand->GetId()));
 
             filtered_Ups_mu_2_px->push_back(Ups_mu_2_px->at(cand->GetId()));
             filtered_Ups_mu_2_py->push_back(Ups_mu_2_py->at(cand->GetId()));
@@ -288,8 +323,13 @@ void secCut::Loop()
             filtered_Ups_mu_2_isPatLooseMuon->push_back(Ups_mu_2_isPatLooseMuon->at(cand->GetId()));
             filtered_Ups_mu_2_isPatMediumMuon->push_back(Ups_mu_2_isPatMediumMuon->at(cand->GetId()));
             filtered_Ups_mu_2_isPatTightMuon->push_back(Ups_mu_2_isPatTightMuon->at(cand->GetId()));
+            filtered_Ups_mu_2_isUpsFilterMatch->push_back(Ups_mu_2_isUpsFilterMatch->at(cand->GetId()));
+            filtered_Ups_mu_2_isJpsiFilterMatch->push_back(Ups_mu_2_isJpsiFilterMatch->at(cand->GetId()));
 
             // Kaons from phi
+            #ifdef SHOW_DEBUG
+            printf("Adding kaon information\n");
+            #endif
             filtered_Phi_K_1_px->push_back(Phi_K_1_px->at(cand->GetId()));
             filtered_Phi_K_1_py->push_back(Phi_K_1_py->at(cand->GetId()));
             filtered_Phi_K_1_pt->push_back(Phi_K_1_pt->at(cand->GetId()));
@@ -302,10 +342,20 @@ void secCut::Loop()
             filtered_Phi_K_2_pt->push_back(Phi_K_2_pt->at(cand->GetId()));
             filtered_Phi_K_2_eta->push_back(Phi_K_2_eta->at(cand->GetId()));
             filtered_Phi_K_2_phi->push_back(Phi_K_2_phi->at(cand->GetId()));    
+
+            #ifdef SHOW_DEBUG
+            printf("End with kaons information\n");
+            #endif
         }
+        #ifdef SHOW_DEBUG
+        printf("Working to fill the tree\n");
+        #endif
         filteredTree->Fill();
         // To plot in parallel: multi candidates allowed and non-overlap candidate only.
         // For all candidates, store them all.
+        #ifdef SHOW_DEBUG
+        printf("Working to store the candidates\n");
+        #endif
         for (auto cand: CandList){
             Jpsi_mass_var.setVal(Jpsi_mass->at(cand->GetId()));
             Ups_mass_var.setVal(Ups_mass->at(cand->GetId()));
@@ -322,12 +372,14 @@ void secCut::Loop()
             Phi_mass_set_multi.add(RooArgSet(Phi_mass_var));
             Pri_mass_set_multi.add(RooArgSet(Pri_mass_var));
         }
-
+        #ifdef SHOW_DEBUG
+        printf("Working to resolve the overlap\n");
+        #endif
         // For non-overlap candidates, store them.
         std::vector<std::shared_ptr<ParticleCand> > CandList_nonOverlap;
         std::sort(CandList.begin(), CandList.end(),
             [](std::shared_ptr<ParticleCand> cand1, std::shared_ptr<ParticleCand> cand2){
-                return cand1->GetScore() < cand2->GetScore();
+                return cand1->GetScore() > cand2->GetScore();
             }
         ); 
         for (auto& cand: CandList){
@@ -364,6 +416,7 @@ void secCut::Loop()
             Pri_mass_set.add(RooArgSet(Pri_mass_var));
         }
         ClearBranches();
+        CandList.clear();
     }
 
     // Draw the histograms.
@@ -385,8 +438,8 @@ void secCut::Loop()
     Phi_mass_frame->Draw();
     c1->cd(4);
     Pri_mass_frame->Draw();
-    c1->SaveAs("secCut_multi.pdf");
-    c1->SaveAs("secCut_multi.png");
+    c1->SaveAs("secCut_multi_by_prob.pdf");
+    c1->SaveAs("secCut_multi_by_prob.png");
 
     // Draw the histograms for the non-overlap candidates.
     TCanvas *c2 = new TCanvas("c2", "c2", 1600, 1200);
@@ -407,8 +460,8 @@ void secCut::Loop()
     Phi_mass_frame_nonOverlap->Draw();
     c2->cd(4);
     Pri_mass_frame_nonOverlap->Draw();
-    c2->SaveAs("secCut_nonOverlap.pdf");
-    c2->SaveAs("secCut_nonOverlap.png");
+    c2->SaveAs("secCut_nonOverlap_by_prob.pdf");
+    c2->SaveAs("secCut_nonOverlap_by_prob.png");
 
     // Save the output tree.
     TFile *outputFile = new TFile("filtered_data_secCut.root", "RECREATE");

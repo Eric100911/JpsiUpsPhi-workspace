@@ -63,13 +63,13 @@ clean:
 # preCut stage:
 # - General target.
 
-pre: $(preCut_output) $(preCut_joboutputs)
+pre: $(preCut_output) $(preCut_joboutputs) preCut/preCut.C
 
 $(preCut_output): $(preCut_joboutputs)
 	hadd -f $@ $^
 
 # - Target for one original root file.
-preCut/jobs_$(suffix)/%/filtered_data_preCut.root: preCut/jobs_$(suffix)/%/runPreCut.C config/datalist.txt
+preCut/jobs_$(suffix)/%/filtered_data_preCut.root: preCut/jobs_$(suffix)/%/runPreCut.C config/datalist.txt preCut/preCut.C
 	cd $(dir $@) && root -x runPreCut.C
 
 # - Target for generating the modified macro.
@@ -85,16 +85,17 @@ sec: $(secCut_joboutputs)
 
 # - Target for one cut condition.
 secCut/jobs_$(suffix)/%/filtered_data_secCut.root: secCut/jobs_$(suffix)/%/runSecCut.C preCut/preCut_$(suffix).root secCut/jobs_$(suffix)/%/secCut.C config/cutlist.txt
-	cd $(dir $@) && root -x runSecCut.C
+	mkdir -p secCut/jobs_$(suffix)/$*
+	cd secCut/jobs_$(suffix)/$* && root -x runSecCut.C
 
 # - Target for generating the modified macro.
 secCut/jobs_$(suffix)/%/runSecCut.C: secCut/runSecCut.C $(preCut_output)
-	mkdir -p $(dir $@)
+	mkdir -p secCut/jobs_$$(suffix)/$$*
 	cp secCut/runSecCut.C $@
 
 # - Extract the cut info from the cut info text file in job directory.
 secCit/jobs_$(suffix)/%/secCut.C: secCut/secCut.C
-	mkdir -p $(dir $@)
+	mkdir -p secCut/jobs_$$(suffix)/$$*
 	
 
 

@@ -435,6 +435,8 @@ void preCut::Loop()
             filtered_Jpsi_mu_1_isPatSoftMuon->push_back(muIsPatSoftMuon->at(Jpsi_mu_1_Idx->at(cand->GetId())));
             filtered_Jpsi_mu_1_isPatMediumMuon->push_back(muIsPatMediumMuon->at(Jpsi_mu_1_Idx->at(cand->GetId())));
             filtered_Jpsi_mu_1_isPatTightMuon->push_back(muIsPatTightMuon->at(Jpsi_mu_1_Idx->at(cand->GetId())));
+            filtered_Jpsi_mu_1_isJpsiFilterMatch->push_back(muIsJpsiFilterMatch->at(Jpsi_mu_1_Idx->at(cand->GetId())));
+            filtered_Jpsi_mu_1_isUpsFilterMatch->push_back(muIsUpsFilterMatch->at(Jpsi_mu_1_Idx->at(cand->GetId())));
 
             filtered_Jpsi_mu_2_px->push_back(muPx->at(Jpsi_mu_2_Idx->at(cand->GetId())));
             filtered_Jpsi_mu_2_py->push_back(muPy->at(Jpsi_mu_2_Idx->at(cand->GetId())));
@@ -446,6 +448,8 @@ void preCut::Loop()
             filtered_Jpsi_mu_2_isPatSoftMuon->push_back(muIsPatSoftMuon->at(Jpsi_mu_2_Idx->at(cand->GetId())));
             filtered_Jpsi_mu_2_isPatMediumMuon->push_back(muIsPatMediumMuon->at(Jpsi_mu_2_Idx->at(cand->GetId())));
             filtered_Jpsi_mu_2_isPatTightMuon->push_back(muIsPatTightMuon->at(Jpsi_mu_2_Idx->at(cand->GetId())));
+            filtered_Jpsi_mu_2_isJpsiFilterMatch->push_back(muIsJpsiFilterMatch->at(Jpsi_mu_2_Idx->at(cand->GetId())));
+            filtered_Jpsi_mu_2_isUpsFilterMatch->push_back(muIsUpsFilterMatch->at(Jpsi_mu_2_Idx->at(cand->GetId())));
 
             filtered_Ups_mu_1_px->push_back(muPx->at(Ups_mu_1_Idx->at(cand->GetId())));
             filtered_Ups_mu_1_py->push_back(muPy->at(Ups_mu_1_Idx->at(cand->GetId())));
@@ -457,6 +461,8 @@ void preCut::Loop()
             filtered_Ups_mu_1_isPatSoftMuon->push_back(muIsPatSoftMuon->at(Ups_mu_1_Idx->at(cand->GetId())));
             filtered_Ups_mu_1_isPatMediumMuon->push_back(muIsPatMediumMuon->at(Ups_mu_1_Idx->at(cand->GetId())));
             filtered_Ups_mu_1_isPatTightMuon->push_back(muIsPatTightMuon->at(Ups_mu_1_Idx->at(cand->GetId())));
+            filtered_Ups_mu_1_isUpsFilterMatch->push_back(muIsUpsFilterMatch->at(Ups_mu_1_Idx->at(cand->GetId())));
+            filtered_Ups_mu_1_isJpsiFilterMatch->push_back(muIsJpsiFilterMatch->at(Ups_mu_1_Idx->at(cand->GetId())));
 
             filtered_Ups_mu_2_px->push_back(muPx->at(Ups_mu_2_Idx->at(cand->GetId())));
             filtered_Ups_mu_2_py->push_back(muPy->at(Ups_mu_2_Idx->at(cand->GetId())));
@@ -468,6 +474,8 @@ void preCut::Loop()
             filtered_Ups_mu_2_isPatSoftMuon->push_back(muIsPatSoftMuon->at(Ups_mu_2_Idx->at(cand->GetId())));
             filtered_Ups_mu_2_isPatMediumMuon->push_back(muIsPatMediumMuon->at(Ups_mu_2_Idx->at(cand->GetId())));
             filtered_Ups_mu_2_isPatTightMuon->push_back(muIsPatTightMuon->at(Ups_mu_2_Idx->at(cand->GetId())));
+            filtered_Ups_mu_2_isUpsFilterMatch->push_back(muIsUpsFilterMatch->at(Ups_mu_2_Idx->at(cand->GetId())));
+            filtered_Ups_mu_2_isJpsiFilterMatch->push_back(muIsJpsiFilterMatch->at(Ups_mu_2_Idx->at(cand->GetId())));
 
             #ifdef SHOW_DEBUG
             std::cout << "Finished adding Jpsi muons to the dataset" << std::endl;
@@ -480,7 +488,7 @@ void preCut::Loop()
             filtered_Phi_K_1_phi->push_back(Phi_K_1_phi->at(cand->GetId()));
             filtered_Phi_K_1_pt->push_back(Phi_K_1_pt->at(cand->GetId()));
 
-            filtered_Phi_K_1_px->push_back(Phi_K_1_px->at(cand->GetId()));
+            filtered_Phi_K_2_px->push_back(Phi_K_2_px->at(cand->GetId()));
             filtered_Phi_K_2_py->push_back(Phi_K_2_py->at(cand->GetId()));
             filtered_Phi_K_2_pz->push_back(Phi_K_2_pz->at(cand->GetId()));
             filtered_Phi_K_2_eta->push_back(Phi_K_2_eta->at(cand->GetId()));
@@ -497,6 +505,8 @@ void preCut::Loop()
         #endif
         // Fill into the output tree.
         if(filtered_Jpsi_mass->size() > 0){
+            filtered_isJpsiTrigEvt = muIsJpsiTrigMatch->at(0);
+            filtered_isUpsTrigEvt  = muIsUpsTrigMatch->at(0);
             outputTree->Fill();
         }
 
@@ -575,6 +585,8 @@ void preCut::Loop()
         filtered_Jpsi_mu_1_isPatSoftMuon->clear();
         filtered_Jpsi_mu_1_isPatMediumMuon->clear();
         filtered_Jpsi_mu_1_isPatTightMuon->clear();
+        filtered_Jpsi_mu_1_isJpsiFilterMatch->clear();
+        filtered_Jpsi_mu_1_isUpsFilterMatch->clear();
 
         filtered_Jpsi_mu_2_px->clear();
         filtered_Jpsi_mu_2_py->clear();
@@ -586,6 +598,8 @@ void preCut::Loop()
         filtered_Jpsi_mu_2_isPatSoftMuon->clear();
         filtered_Jpsi_mu_2_isPatMediumMuon->clear();
         filtered_Jpsi_mu_2_isPatTightMuon->clear();
+        filtered_Jpsi_mu_2_isJpsiFilterMatch->clear();
+        filtered_Jpsi_mu_2_isUpsFilterMatch->clear();
 
         filtered_Ups_mu_1_px->clear();
         filtered_Ups_mu_1_py->clear();
@@ -597,6 +611,8 @@ void preCut::Loop()
         filtered_Ups_mu_1_isPatSoftMuon->clear();
         filtered_Ups_mu_1_isPatMediumMuon->clear();
         filtered_Ups_mu_1_isPatTightMuon->clear();
+        filtered_Ups_mu_1_isUpsFilterMatch->clear();
+        filtered_Ups_mu_1_isJpsiFilterMatch->clear();
 
         filtered_Ups_mu_2_px->clear();
         filtered_Ups_mu_2_py->clear();
@@ -608,6 +624,8 @@ void preCut::Loop()
         filtered_Ups_mu_2_isPatSoftMuon->clear();
         filtered_Ups_mu_2_isPatMediumMuon->clear();
         filtered_Ups_mu_2_isPatTightMuon->clear();
+        filtered_Ups_mu_2_isUpsFilterMatch->clear();
+        filtered_Ups_mu_2_isJpsiFilterMatch->clear();
 
         filtered_Phi_K_1_px->clear();
         filtered_Phi_K_1_py->clear();
