@@ -1,4 +1,6 @@
-*.png
+workbook.png
+preCut/*.png
+secCut/*.png
 preCut/jobs_*/*
 secCut/jobs_*/*
 *.old
