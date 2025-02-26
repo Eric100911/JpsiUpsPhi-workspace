@@ -196,8 +196,27 @@ In the triple-$J/\psi$ analysis note (CMS AN-20-146), the authors did not apply 
 
 In producing the final-state particles, we weaken the vertexing restrictions, and instead use the `fromPV()` and `pvAssociationQuality()` attributes of the final-state particles to filter out the pileup.
 
-For $J/\psi + J/\psi + \Upsilon$ analysis, we require 
+For $J/\psi + J/\psi + \Upsilon$ analysis, we require the following for vertexing in producing ntuples.
 
+* vertexing for $J/\psi \rightarrow \mu^+ + \mu^-$ : require > 1% probability (as is required before)
+* vertexing for $\Upsilon \rightarrow \mu^+ + \mu^-$: require > 1% probability (as is required before)
+* $\mu^\pm$  `fromPV()`: 2 or 3
+
+For $J/\psi + J/\psi + \phi$ analysis, we require the following for vertexing in producing ntuples.
+
+* vertexing for $J/\psi \rightarrow \mu^+ + \mu^-$ : require > 1% probability (as is required before)
+* vertexing for $\phi \rightarrow K^+ + K^-$: require > 1% probability (as is required before)
+* vertexing for $J/\psi + J/\psi$: require a valid fit.
+* $\mu^\pm$ & $K^\pm$  `fromPV()` : 2 or 3
+
+For $J/\psi + \Upsilon + \phi$ analysis, we require the following for vertexing in producing ntuples.
+
+* vertexing for $J/\psi \rightarrow \mu^+ + \mu^-$ : require > 1% probability (as is required before)
+* vertexing for $\Upsilon \rightarrow \mu^+ + \mu^-$: require > 1% probability (as is required before)
+* vertexing for $\phi \rightarrow K^+ + K^-$: require > 1% probability (as is required before)
+* $\mu^\pm$ & $K^\pm$  `fromPV()` : 2 or 3
+
+While making such changes, it is still important to keep a record of the "triple-meson" vertex fitting. We may still need it for future filtering.
 
 #### Possible Implementation with CMSSW code in `TPS-Onia2MuMu`
 
@@ -370,5 +389,4 @@ X_One_Tree->Branch("Phi_K_2_fromPV", &Phi_K_2_fromPV);
 X_One_Tree->Branch("Phi_K_2_pvAssociationQuality", &Phi_K_2_pvAssociationQuality);
 //...
 ```
-
 
