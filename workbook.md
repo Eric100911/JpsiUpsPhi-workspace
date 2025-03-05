@@ -173,3 +173,220 @@ Number of candidates with Ups muons that lead to UpsTrig mono:  12432
 > 看看保留了哪些Trigger，尝试一下高pT Upsilon trigger
 >
 > 看看不加顶点限制的Upsilon （1S, 2S, 3S）
+
+## 25 Feb. 2025
+
+### Upsilon spectrum.
+
+Actually, even with all triggers and a limited amount of data (~ 32k Event), Upsilon proved clearly visible.
+
+<img src="images/Upsilon_inclusive_32kEvt.png" alt="Upsilon_inclusive_32kEvt" style="zoom:50%;" />
+
+That is without applying cuts, yet the peaks of $\Upsilon(1S),\Upsilon (2S), \Upsilon(3S) $ have become readily visible. We shall say with much confidence that we can find $\Upsilon$ mesons pretty well.
+
+We rule out the "Upsilon smeared by background from Jpsi trigger data" hypothesis.
+
+### Vertexing of Mesons
+
+Vertexing to reconstruct intermidiate particles ($J/\psi, \Upsilon, \phi$) is crucial, yet it might not be the case if we impose strict limits on the vertexing between the intermidiate particles.
+
+In the triple-$J/\psi$ analysis note (CMS AN-20-146), the authors did not apply vertexing restrictions in the "triple-$J/\psi$" fit. Instead, they used the `fromPV()` and `pvAssociationQuality()` attributes of the final-state muons. This restriction alone is able to reduce the effect of pileup greatly in Run 2.
+
+#### New Idea: Using `fromPV()` and `pvAssociationQuality()` Attributes of the Final-state Particles
+
+In producing the final-state particles, we weaken the vertexing restrictions, and instead use the `fromPV()` and `pvAssociationQuality()` attributes of the final-state particles to filter out the pileup.
+
+For $J/\psi + J/\psi + \Upsilon$ analysis, we require the following for vertexing in producing ntuples.
+
+* vertexing for $J/\psi \rightarrow \mu^+ + \mu^-$ : require > 1% probability (as is required before)
+* vertexing for $\Upsilon \rightarrow \mu^+ + \mu^-$: require > 1% probability (as is required before)
+* $\mu^\pm$  `fromPV()`: 2 or 3
+
+For $J/\psi + J/\psi + \phi$ analysis, we require the following for vertexing in producing ntuples.
+
+* vertexing for $J/\psi \rightarrow \mu^+ + \mu^-$ : require > 1% probability (as is required before)
+* vertexing for $\phi \rightarrow K^+ + K^-$: require > 1% probability (as is required before)
+* vertexing for $J/\psi + J/\psi$: require a valid fit.
+* $\mu^\pm$ & $K^\pm$  `fromPV()` : 2 or 3
+
+For $J/\psi + \Upsilon + \phi$ analysis, we require the following for vertexing in producing ntuples.
+
+* vertexing for $J/\psi \rightarrow \mu^+ + \mu^-$ : require > 1% probability (as is required before)
+* vertexing for $\Upsilon \rightarrow \mu^+ + \mu^-$: require > 1% probability (as is required before)
+* vertexing for $\phi \rightarrow K^+ + K^-$: require > 1% probability (as is required before)
+* $\mu^\pm$ & $K^\pm$  `fromPV()` : 2 or 3
+
+While making such changes, it is still important to keep a record of the "triple-meson" vertex fitting. We may still need it for future filtering.
+
+#### Possible Implementation with CMSSW code in `TPS-Onia2MuMu`
+
+##### Extracting `fromPV()` and `pvAssociationQuality()` attributes of the muons
+
+The `pat::Muon` does not have `fromPV()` and `pvAssociationQuality()` attributes by itself. However, given that the `pat::Muon` is associated with a `pat::PackedCandidate` as a track, we can use the `pat::PackedCandidate` to extract these attributes.
+
+Luckily, there is already a loop designed to loop over the `pat::PackedCandidate` to remove the muon tracks from the list of all tracks. We can add the extraction of `fromPV()` and `pvAssociationQuality()` attributes in this loop.
+
+```cpp
+for (edm::View<pat::Muon>::const_iterator iMuonP  = thePATMuonHandle->begin();
+		                                  iMuonP != thePATMuonHandle->end();
+                                        ++iMuonP)
+	{
+        try{
+		     /*****************************
+		    * Some muon properties here.
+		    *****************************/
+		    for (std::vector<edm::View<pat::PackedCandidate>::const_iterator>::const_iterator iTrackfID  = nonMuonPionTrack.begin();
+		                                                                                      iTrackfID != nonMuonPionTrack.end(); 
+                                                                                            ++iTrackfID                             )
+		    {
+                try{
+		    	    if(iMuonP->track().isNull()){
+		    	    	continue;
+		    	    }
+		    	    edm::View<pat::PackedCandidate>::const_iterator iTrackf = *(iTrackfID);
+		    	    iMuonP->track()->px();
+                    // Match using the momentum. [Annotated by Eric Wang, 20240704]                  
+		    	    if (   iTrackf->px() == iMuonP->track()->px() 
+                        && iTrackf->py() == iMuonP->track()->py() 
+                        && iTrackf->pz() == iMuonP->track()->pz()) {
+                        // [New Code] Here we can extract the fromPV() and pvAssociationQuality() attributes of the muon.
+                        muFromPV->push_back(iTrackf->fromPV());
+                        muPVAssociationQuality->push_back(iTrackf->pvAssociationQuality());
+                        // [End of New Code]
+		    	    	nonMuonPionTrack.erase(iTrackfID);
+		    	    	iTrackfID = iTrackfID - 1;
+		    	    }
+                } catch(...){
+                    continue;
+                }
+		    }
+		    /*****************************
+		    * Some Trigger matching here
+		    *****************************/
+            } catch(...){
+                continue;
+            }
+	}
+```
+
+##### Extracting `fromPV()` and `pvAssociationQuality()` attributes of the $K^{\pm}$ tracks
+
+For the $K^{\pm}$ tracks, we can do the extraction directly from the `pat::PackedCandidate` object, yet we can only save this for the $K^{\pm}$ tracks that are picked as candidates for the $\phi$ meson.
+
+In storing the $K^{\pm}$ tracks, we can add the extraction of `fromPV()` and `pvAssociationQuality()` attributes.
+
+```cpp
+// Kaon 1
+Phi_K_1_px->push_back(nonMuonPionTrack[KPair_Phi->second[0]]->px());
+Phi_K_1_py->push_back(nonMuonPionTrack[KPair_Phi->second[0]]->py());
+Phi_K_1_pz->push_back(nonMuonPionTrack[KPair_Phi->second[0]]->pz());
+Phi_K_1_pt->push_back(nonMuonPionTrack[KPair_Phi->second[0]]->pt());
+Phi_K_1_eta->push_back(nonMuonPionTrack[KPair_Phi->second[0]]->eta());
+Phi_K_1_phi->push_back(nonMuonPionTrack[KPair_Phi->second[0]]->phi());
+// [New Code] extracting fromPV() and pvAssociationQuality() attributes
+Phi_K_1_fromPV->push_back(nonMuonPionTrack[KPair_Phi->second[0]]->fromPV());
+Phi_K_1_pvAssociationQuality->push_back(nonMuonPionTrack[KPair_Phi->second[0]]->pvAssociationQuality());
+// [End of New Code]
+```
+
+##### Supplimentary: Storing the `fromPV()` and `pvAssociationQuality()` attributes in the TTree
+
+Apparently, these new atrributes require new branches in the TTrees. We can add these branches in the `TPS-Onia2MuMu` analyzer.
+
+In `src/MultiLepPAT.h`, when declaring the `MultiLepPAT` class:
+
+```cpp
+//...
+vector<int>         *muIsPatLooseMuon, *muIsPatTightMuon, *muIsPatSoftMuon, *muIsPatMediumMuon;
+// [New Code] Adding the new branches for fromPV() and pvAssociationQuality() of muons.
+vector<int>         *muFromPV, *muPVAssociationQuality;
+// [End of New Code]
+//...
+```
+
+For the $K^{\pm}$ tracks, we can add the branches in the corresponding place in the declaration of `MultiLepPAT`:
+```cpp
+//...
+vector<float>       *Phi_K_2_eta, *Phi_K_2_phi, *Phi_K_2_pt;
+// [New Code] Adding the new branches for fromPV() and pvAssociationQuality() of K^{\pm} tracks.
+vector<int>         *Phi_K_1_fromPV, *Phi_K_1_pvAssociationQuality;
+vector<int>         *Phi_K_2_fromPV, *Phi_K_2_pvAssociationQuality;
+// [End of New Code]
+//...
+```
+
+In `src/MultiLepPAT.cc`, when constructing `MultiLepPAT`:
+
+> Reminder 1: despite being `enum` types in the `pat::PackedCandidate`, `fromPV()` and `pvAssociationQuality()` are stored as `int` in the `pat::PackedCandidate`. 
+>
+> Reminder 2: when initializing the branches in the constructor, the order of the branches should be consistent with the order of the variables in the class declaration.
+
+```cpp
+//... 
+muIsPatLooseMuon(0), muIsPatTightMuon(0), muIsPatSoftMuon(0), muIsPatMediumMuon(0),
+// [New Code] Adding the new branches for fromPV() and pvAssociationQuality() of muons.
+muFromPV(0), muPVAssociationQuality(0),
+// [End of New Code]
+```
+
+For the $K^{\pm}$ tracks, we can add the branches in the corresponding place in the constructor of `MultiLepPAT`:
+
+```cpp
+//...
+Phi_K_2_eta(0), Phi_K_2_phi(0), Phi_K_2_pt(0),
+// [New Code] Adding the new branches for fromPV() and pvAssociationQuality() of K^{\pm} tracks.
+Phi_K_1_fromPV(0), Phi_K_1_pvAssociationQuality(0),
+Phi_K_2_fromPV(0), Phi_K_2_pvAssociationQuality(0),
+//...
+```
+
+In `src/MultiLepPAT.cc`, after filling the branches into the TTree:
+
+```cpp
+//...
+muIsPatMediumMuon->clear();
+// [New Code] Filling the new branches for fromPV() and pvAssociationQuality() of muons.
+muFromPV->clear();
+muPVAssociationQuality->clear();
+// [End of New Code]
+//...
+```
+
+For the $K^{\pm}$ tracks, we have to clear also:
+
+```cpp
+//...
+Phi_K_2_eta->clear();
+// [New Code] Filling the new branches for fromPV() and pvAssociationQuality() of K^{\pm} tracks.
+Phi_K_1_fromPV->clear();
+Phi_K_1_pvAssociationQuality->clear();
+Phi_K_2_fromPV->clear();
+Phi_K_2_pvAssociationQuality->clear();
+//...
+```
+
+In `MultiLepPAT::beginJob()`, we have to initialize the new branches:
+
+```cpp
+//...
+X_One_Tree->Branch("muIsPatMediumMuon", &muIsPatMediumMuon);
+// [New Code] Adding the new branches for fromPV() and pvAssociationQuality() of muons.
+X_One_Tree->Branch("muFromPV", &muFromPV);
+X_One_Tree->Branch("muPVAssociationQuality", &muPVAssociationQuality);
+// [End of New Code]
+//...
+```
+
+For the $K^{\pm}$ tracks, we have to initialize the new branches:
+
+```cpp
+//...
+X_One_Tree->Branch("Phi_K_2_eta", &Phi_K_2_eta);
+// [New Code] Adding the new branches for fromPV() and pvAssociationQuality() of K^{\pm} tracks.
+X_One_Tree->Branch("Phi_K_1_fromPV", &Phi_K_1_fromPV);
+X_One_Tree->Branch("Phi_K_1_pvAssociationQuality", &Phi_K_1_pvAssociationQuality);
+X_One_Tree->Branch("Phi_K_2_fromPV", &Phi_K_2_fromPV);
+X_One_Tree->Branch("Phi_K_2_pvAssociationQuality", &Phi_K_2_pvAssociationQuality);
+//...
+```
+
