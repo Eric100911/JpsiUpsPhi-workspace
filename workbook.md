@@ -390,3 +390,31 @@ X_One_Tree->Branch("Phi_K_2_pvAssociationQuality", &Phi_K_2_pvAssociationQuality
 //...
 ```
 
+## 5 Mar. 2025
+今天跑$J/\psi+ J/\psi + \Upsilon$的数据。
+
+好消息是我们在放宽了顶点限制之后，发现了更多的事例。
+
+坏消息是...我们在我们的`Makefile`里面发现了一些“令人汗毛倒竖”的问题，而且在这个workspace里面也存在。
+
+之前我们为了生成各个job对应的`runPreCut.C`文件，我们使用了这样的代码：
+
+```Makefile
+preCut/jobs_$(suffix)/%/runPreCut.C: preCut/runPreCut.C config/datalist.txt preCut/preCut.C
+    mkdir -p $(dir $@)
+    echo $@ | sed -r -e "s|preCut/jobs_$(suffix)\/(.*Run)([0-9]{4,4})(.*)\/runPreCut.C$$|$(rootNtupleDir)/P_Run\2_$(suffix)/\1\2\3.root|g"
+    cat tmp_file.txt
+    sed -e "s|JOB_DATA|`cat tmp_file.txt`|g" $< | sed -r -e "s|\/\/\W*#define RUN_JOB|#define RUN_JOB|g" > $@
+```
+
+这样一个用`tmp_file.txt`“倒一手”的办法，看似避免了一些超长行，实际上带来了一个“跨线程安全性”的问题：如果两个job同时在生成`runPreCut.C`文件，那么`tmp_file.txt`就会被同时写入，导致文件内容混乱。在实际运行中，我们在检查生成的`runPreCut.C`文件时，发现他们的`JOB_DATA`和文件夹对应的job不一致。由此，我们才发现了这一问题。
+
+我们最后用一种套娃的办法解决了这个问题：
+
+```Makefile
+preCut/jobs_$(suffix)/%/runPreCut.C: preCut/runPreCut.C config/datalist.txt preCut/preCut.C
+	mkdir -p $(dir $@)
+	sed -e "s|JOB_DATA|$(shell echo $@ | sed -r -e "s|preCut/jobs_$(suffix)\/(.*Run)([0-9]{4,4})(.*)\/runPreCut.C$$|$(rootNtupleDir)/P_Run\2_$(suffix)/\1\2\3.root|g")|g" $< | sed -r -e "s|\/\/\W*#define RUN_JOB|#define RUN_JOB|g" > $@
+```
+
+不得不说，这样还是造成了一个超长行，但起码把代码改对了...
