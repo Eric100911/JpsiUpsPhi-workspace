@@ -75,9 +75,7 @@ preCut/jobs_$(suffix)/%/filtered_data_preCut.root: preCut/jobs_$(suffix)/%/runPr
 # - Target for generating the modified macro.
 preCut/jobs_$(suffix)/%/runPreCut.C: preCut/runPreCut.C config/datalist.txt preCut/preCut.C
 	mkdir -p $(dir $@)
-	echo $@ | sed -r -e "s|preCut/jobs_$(suffix)\/(.*Run)([0-9]{4,4})(.*)\/runPreCut.C$$|$(rootNtupleDir)/P_Run\2_$(suffix)/\1\2\3.root|g" > tmp_file.txt
-	cat tmp_file.txt
-	sed -e "s|JOB_DATA|`cat tmp_file.txt`|g" $< | sed -r -e "s|\/\/\W*#define RUN_JOB|#define RUN_JOB|g" > $@
+	sed -e "s|JOB_DATA|$(shell echo $@ | sed -r -e "s|preCut/jobs_$(suffix)\/(.*Run)([0-9]{4,4})(.*)\/runPreCut.C$$|$(rootNtupleDir)/P_Run\2_$(suffix)/\1\2\3.root|g")|g" $< | sed -r -e "s|\/\/\W*#define RUN_JOB|#define RUN_JOB|g" > $@
 
 # secCut stage:
 # - General target.
