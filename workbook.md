@@ -501,7 +501,7 @@ preCut/jobs_$(suffix)/%/runPreCut.C: preCut/runPreCut.C config/datalist.txt preC
 
 继续修bug，而且没有太多进展。
 
-由于赵一扬还在赶挑战杯进度，很多问题没办法问他。现在正在和陈诗洋学长沟通，一起处理这个问题。
+现在正在和陈诗洋学长沟通，一起处理这个问题。
 
 CMS Induction Event里面Phat Srimanobhas提到过这样一个问题：我们从GEN一直到RECO放在同一个python文件做可能出bug。
 
