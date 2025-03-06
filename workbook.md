@@ -391,13 +391,89 @@ X_One_Tree->Branch("Phi_K_2_pvAssociationQuality", &Phi_K_2_pvAssociationQuality
 ```
 
 ## 5 Mar. 2025
-今天跑$J/\psi+ J/\psi + \Upsilon$的数据。
 
-好消息是我们在放宽了顶点限制之后，发现了更多的事例。
+### 关于顶点拟合的判据
 
-坏消息是...我们在我们的`Makefile`里面发现了一些“令人汗毛倒竖”的问题，而且在这个workspace里面也存在。
+比照triple-$J/\psi$的Analysis Note (AN2020-146)，尝试复现`fromPV`和`pvAssociationQuality`这两个属性作为判据的做法，然而始终没办法一一匹配。中间发CMS Talk的post，发完得知相似的问题近两周已经有人问过BPH Muon Contact；MUO POG的Matteo给出了和之前相同的建议，但是建议的三种方法好像都行不通。
 
-之前我们为了生成各个job对应的`runPreCut.C`文件，我们使用了这样的代码：
+最后我们将条件放宽到$J/\psi+J/\psi+\Upsilon$的顶点拟合只要求`isValid()`进行尝试，
+
+
+
+> # Retrieving `fromPV` and `pvAssociationQuality` Properties of Muons
+>
+> Dear MUO POG experts,
+>
+> I have a framework for reconstructing some rare events which contain $J/\psi$ mesons each decaying into a pair of oppositely-charged muons from miniAOD data files. Currently, we would like to uitilize the `fromPV()` and `pvAssociationQuality()` properties to apply a not-so-strict vertexing selection to the event. Those properties, however, seem only implemented in `pat::PackedCandidate` class but not in `pat::Muon`. We have tried matching the objects by comparing the momenta of the particles and/or PDG IDs. However, we have some doubts over the validity of such methods since we have observed some unmatched muons.
+>
+> We have checked on the definition of `pat::PackedCandidate` and `pat::Muon` and could not find inheritance or pointer relations between the `pat::Muon` and the corresponding `pat::PackedCandidate` . 
+>
+> Therefore, I would like to ask if there is a fully reliable way of doing such matching or directly retirieving the `fromPV` and `pvAssociationQuality` properties of muons.
+>
+> Many thanks in advance for your help.
+>
+> Chi Wang
+>
+> 
+>
+> > Dear Chi Wang,
+> > Indeed this is not an obvious question, since the `pat::Muon` collections do not have a `fromPV`member. Maybe the authors of the previous version of the analysis can share with you their code or shed some light on this information they gave, since (at least to my knowledge) the `fromPV`was never a member of the `pat::Muon` class, so they must have retrieved it in some other way.
+> >
+> > After a quick search in CMSSW, it seems that you should be able to access this information by doing:
+> >
+> > ```
+> > const pat::PackedCandidatePtr aspacked(mu)
+> > aspacked->fromPV()
+> > ```
+> >
+> > Similarly to what is done here [1](https://github.com/cms-sw/cmssw/blob/master/RecoMuon/MuonIsolation/plugins/MuonPFIsolationWithConeVeto.cc#L51-L59).
+> >
+> > However, this takes as input a `reco::CandidatePtr&`, so I am not sure this works with a `pat::Muon`.
+> >
+> > An alternative approach would be to take a `reco::Candidate` (so probably your `pat::Muon`) and the PV in the event and build a new `PackedCandidate` using its constructor [2](https://github.com/cms-sw/cmssw/blob/master/DataFormats/PatCandidates/interface/PackedCandidate.h#L75).
+> >
+> > At this point, you should be able to use `fromPV()` on this object.
+> >
+> > Another possible solution could be to re-implement in your code the corresponding functions [3](https://github.com/cms-sw/cmssw/blob/master/DataFormats/PatCandidates/interface/PackedCandidate.h#L718-L752), so that you can call them also for a `pat::Muon`.
+> >
+> > More on a practical side, I am wondering why you need to use this information to select muons based on the tracks quality. For muons we already store the `dxy`, `dz`, and `SIP3D` parameters (and their errors). If your goal is to select “good” muons with respect to the primary vertex, wouldn’t be better (or at least equivalent) to use directly these observables? Maybe I am missing something that is more PAG-specific.
+> >
+> > I hope some of this can help.
+> >
+> > Best,
+> >
+> > Matteo for MUO
+>
+> Dear Matteo,
+>
+> Much thanks for your help!
+>
+> Indeed this selection criteria is somehow BPH-specific. We are trying to reproduce the selection in BPH-21-004, which used the `fromPV()` and `pvAssociationQuality` to select "good muons". We have also reached out to the BPH muon contact, who have received similar questions and showed your answer to that question.
+>
+> So far, we have experimented with some solutions you have proposed. Constructing `PackedCandidatePtr` from `pat::Muon` directly would result in the exception below for the majority of the muons.
+>
+> > RefCore: A request to resolve a reference to a product of type '`reco::Candidate`' with `ProductID` '3:3421' can not be satisfied because the product cannot be found.
+> > Probably the branch containing the product is not stored in the input file.
+>
+> Building a `pat::PackedCandidate` from `pat::Muon` and the PV would not result in exceptions, yet the `pvAssociationQuality` all gave 0. We believe that, in the process of building `pat::PackedCandidate` when making `miniAOD`, some `qualityFlags_` are assigned to the candidate. This assignment is based on the primary vertex fitting process and it would be difficult, if not impossible, to retrieve such information through other methods. For similar reasons, we believe re-implementing the functions won't give satisfactory results.
+>
+> At the moment, we are trying out some other strategies to do the selection, perhaps also referring to other analyses involving reconstruction of non-prompt $J/\psi$ or other particles.
+>
+> Thank you once again for your suggestion.
+>
+> Best,
+>
+> Chi Wang
+>
+> 
+
+
+
+### Bug fix: $J/\psi+ J/\psi + \Upsilon$ 和$J/\psi+\Upsilon+\phi$在产生Ntuple之后的处理
+
+在我们的`Makefile`里面几乎是偶然地发现了一些“令人汗毛倒竖”的问题，而且在$J/\psi+\Upsilon+\phi$的workspace里面也存在。
+
+之前我们为了生成各个job对应的`runPreCut.C`文件，我们使用了形如这样的代码：
 
 ```Makefile
 preCut/jobs_$(suffix)/%/runPreCut.C: preCut/runPreCut.C config/datalist.txt preCut/preCut.C
@@ -418,3 +494,53 @@ preCut/jobs_$(suffix)/%/runPreCut.C: preCut/runPreCut.C config/datalist.txt preC
 ```
 
 不得不说，这样还是造成了一个超长行，但起码把代码改对了...
+
+这样带来的后果之一，就是之前我们画的很多图都必须丢掉...它们里面可能重复绘制了一些candidate而遗漏了另一些，实际上放大了一些本底涨落。
+
+### HELAC-Onia MC Production
+
+继续修bug，而且没有太多进展。
+
+由于赵一扬还在赶挑战杯进度，很多问题没办法问他。现在正在和陈诗洋学长沟通，一起处理这个问题。
+
+CMS Induction Event里面Phat Srimanobhas提到过这样一个问题：我们从GEN一直到RECO放在同一个python文件做可能出bug。
+
+经过分布运行排查，我们把问题定位到GEN-SIM这一步，并且暂时排除了GEN一直到RECO使用同个配置文件的直接风险，但是之后就几无进展。
+
+## 6 Mar. 2024
+
+昨天的bug修完了以后，出来了一些蛮漂亮的数据。虽然还没有做三维拟合，而且仅仅用了2023数据（$\mathcal{L}\approx 27 \space\mathrm{fb^{-1}}$），但是足以看到这个：
+
+<img src="images/JpsiJpsiUps_result_3.png" alt="SecFilter_nonOverlap" style="zoom:50%;" />
+
+筛选条件：
+
+##### "Default" cut for $J/\psi$
+
+* $p_{T} > 6\mathrm{GeV/c}$
+
+* $|\eta| < 2.5$
+
+##### "Default" cut for $\mu^{\pm}$ 
+
+* For $|\eta| < 1.2$, require $p_T > 2.5 \mathrm{GeV/c}$
+* For $1.2 < |\eta| < 2.5$, require $p_T > 3.5 \mathrm{GeV/c}$
+* Muon ID: soft
+
+##### Vertices
+
+* For quarkonia decay vertices, require at least 1%
+* For triple quarkonia vertex, require a "valid" fit.
+
+##### Attempted cut for $\Upsilon$
+
+* $p_T > 2\space \mathrm{GeV/c}$
+* $|\eta| < 2.5$
+* muons: $p_T > 3\space \mathrm{GeV/c}$
+
+
+
+
+
+
+
