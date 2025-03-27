@@ -505,7 +505,7 @@ preCut/jobs_$(suffix)/%/runPreCut.C: preCut/runPreCut.C config/datalist.txt preC
 
 CMS Induction Event里面Phat Srimanobhas提到过这样一个问题：我们从GEN一直到RECO放在同一个python文件做可能出bug。
 
-经过分布运行排查，我们把问题定位到GEN-SIM这一步，并且暂时排除了GEN一直到RECO使用同个配置文件的直接风险，但是之后就几无进展。
+经过分布运行排查，我们把问题定位到GEN这一步，并且暂时排除了GEN一直到RECO使用同个配置文件的直接风险，但是之后就几无进展。
 
 ## 6 Mar. 2024
 
@@ -513,26 +513,26 @@ CMS Induction Event里面Phat Srimanobhas提到过这样一个问题：我们从
 
 <img src="images/JpsiJpsiUps_result_3.png" alt="SecFilter_nonOverlap" style="zoom:50%;" />
 
-筛选条件：
+### 筛选条件：
 
-##### "Default" cut for $J/\psi$
+#### "Default" cut for $J/\psi$
 
 * $p_{T} > 6\mathrm{GeV/c}$
 
 * $|\eta| < 2.5$
 
-##### "Default" cut for $\mu^{\pm}$ 
+#### "Default" cut for $\mu^{\pm}$ 
 
 * For $|\eta| < 1.2$, require $p_T > 2.5 \mathrm{GeV/c}$
 * For $1.2 < |\eta| < 2.5$, require $p_T > 3.5 \mathrm{GeV/c}$
 * Muon ID: soft
 
-##### Vertices
+#### Vertices
 
 * For quarkonia decay vertices, require at least 1%
 * For triple quarkonia vertex, require a "valid" fit.
 
-##### Attempted cut for $\Upsilon$
+#### Attempted cut for $\Upsilon$
 
 * $p_T > 2\space \mathrm{GeV/c}$
 * $|\eta| < 2.5$
@@ -544,3 +544,517 @@ CMS Induction Event里面Phat Srimanobhas提到过这样一个问题：我们从
 
 
 
+## 8 Mar. 2025
+
+现在是已经复现出来了$J/\psi+\Upsilon$的GEN-SIM，尝试了$J/\psi+J/\psi+\Upsilon$ GEN-SIM的各种参数调整，还是没有显著改善。
+
+一些错误日志和LHE文件片段刚才喂给了DeepSeek，看到了这样的建议：
+
+> 我在尝试用Pythia8对Helac-Onia产生的J/psi+J/psi+Upsilon事例处理衰变和强子化，遇到了这些pythia报错以及cmsException，请为我综合解读：
+> Pythia报错：
+>
+> ```
+> PYTHIA Warning in Pythia::check: energy-momentum not quite conserved  
+>  PYTHIA Error in Pythia::check: mismatch in daughter and mother lists  
+>  PYTHIA Error in Pythia::next: check of event revealed problems  
+> ```
+>
+> cmsException:
+>
+> ```
+> ----- Begin Fatal Exception 08-Mar-2025 06:43:03 CET-----------------------
+> An exception of category 'StdException' occurred while
+>    [0] Processing  Event run: 1 lumi: 1 event: 1 stream: 0
+>    [1] Running path 'recosim_step'
+>    [2] Calling method for module Pythia8ConcurrentHadronizerFilter/'generator'
+> Exception Message:
+> A std::exception was thrown.
+> vector::_M_range_check: __n (which is 1114112) >= this->size() (which is 38)
+> ----- End Fatal Exception -------------------------------------------------
+> ```
+>
+>
+> （由于技术原因，联网搜索暂不可用）
+>
+> ---
+>
+> ### **问题分析与解决方案**
+>
+> 您成功处理了 **J/ψ + Υ** 事例但失败于 **J/ψ + J/ψ + Υ** 事例，根本原因可能是 **多个J/ψ粒子的处理逻辑冲突** 或 **Pythia对复杂衰变链的支持不足**。以下是具体分析与解决方案：
+>
+> ---
+>
+> ### **1. 核心问题分析**
+> #### **（1）多J/ψ粒子的母子关系冲突**
+> - **现象**：  
+>   当事件中存在多个J/ψ时，Pythia可能无法正确关联每个J/ψ的衰变产物（如μ子对），导致母子列表不匹配（`mismatch in daughter and mother lists`）。  
+> - **原因**：  
+>   - LHE文件中多个J/ψ的**状态码（status code）未正确标记为中间粒子**（应为 `status=2`）。  
+>   - 强制衰变设置（如 `443:onIfMatch = 13 -13`）可能未正确区分不同J/ψ的衰变通道，导致索引混乱。
+>
+> #### **（2）四动量守恒的数值敏感性**
+> - **现象**：  
+>   多粒子系统的四动量守恒检查更敏感，轻微数值误差可能被放大（如 `energy-momentum not quite conserved`）。  
+> - **原因**：  
+>   - Helac-Onia生成的事件中存在四动量近似但非严格守恒的情况（例如，高能碰撞中数值舍入误差）。  
+>   - Pythia的强子化过程（如初态辐射ISR）在多粒子场景中引入额外动量扰动。
+>
+> #### **（3）CMSSW并发处理的竞争条件**
+> - **现象**：  
+>   `vector::_M_range_check` 错误在多J/ψ事件中更易触发。  
+> - **原因**：  
+>   `Pythia8ConcurrentHadronizerFilter` 在多线程处理时，可能因粒子索引分配冲突导致越界访问。
+>
+> ---
+>
+> ### **2. 分步解决方案**
+>
+> #### **（1）修正LHE文件的粒子状态码**
+> 使用 `lhe_analyzer` 检查LHE文件，确保所有J/ψ（PID=443）和Υ（PID=553）的 **状态码为 `2`**（中间粒子），而非 `1`（末态粒子）。  
+> **示例修正后的LHE事件片段**：  
+> ```xml
+> <event>
+>   <!-- 初始质子（status=-1） -->
+>   <particle pdgid="2212" ... status="-1" /> 
+>   <particle pdgid="2212" ... status="-1" />
+>   <!-- 中间J/ψ（status=2） -->
+>   <particle pdgid="443" ... status="2" />
+>   <particle pdgid="443" ... status="2" />
+>   <!-- 中间Υ（status=2） -->
+>   <particle pdgid="553" ... status="2" />
+> </event>
+> ```
+>
+> #### **（2）调整Pythia配置参数**
+> 在CMSSW配置文件中修改以下参数以支持多J/ψ衰变：  
+> ```python
+> process.generator = cms.EDFilter("Pythia8ConcurrentHadronizerFilter",
+>     PythiaParameters = cms.PSet(
+>         processParameters = cms.vstring(
+>             # 放宽四动量守恒检查的容差
+>             "Check:epTolErr = 1e-3",          # 允许0.1%的动量误差
+>             "Check:epTolWarn = 1e-4",          # 警告阈值设为0.01%
+>             
+>             # 禁用自动母子关系重建冲突的检查
+>             "ProcessLevel:resonanceDecays = off",  
+>             
+>             # 明确指定每个J/ψ的独立衰变通道
+>             "443:addChannel = 1 1.0 0 13 -13",  # J/ψ → μ+μ-
+>             "443:addChannel = 1 1.0 0 11 -11",  # J/ψ → e+e-
+>         ),
+>     ),
+> )
+> ```
+>
+> #### **（3）强制单线程运行**
+> 在CMSSW配置中禁用并发处理，排除多线程竞争：  
+> ```python
+> process.options.numberOfThreads = cms.untracked.uint32(1)
+> process.options.numberOfStreams = cms.untracked.uint32(0)
+> ```
+>
+> #### **（4）启用Pythia详细日志**
+> 在配置中增加以下参数，定位具体错误事件：  
+> ```python
+> process.generator.pythiaHepMCVerbosity = cms.untracked.bool(True)
+> process.generator.pythiaPylistVerbosity = cms.untracked.int32(4)
+> ```
+>
+> #### **（5）验证多J/ψ事件的物理合理性**
+> 确保Helac-Onia生成的 **J/ψ + J/ψ + Υ** 事件符合物理过程：  
+> - 检查J/ψ的生成机制（如是否通过双胶子融合或双重产生过程）。  
+> - 确认事件中不存在非物理的粒子关联（如J/ψ质量远低于PDG值）。
+>
+> ---
+>
+> ### **3. 高级调试步骤**
+> #### **（1）对比独立Pythia运行结果**
+> 编写独立脚本（不依赖CMSSW），验证多J/ψ事件是否可通过Pythia单独处理：  
+> ```python
+> import pythia8
+> pythia = pythia8.Pythia()
+> pythia.readString("Beams:frameType = 4")
+> pythia.readString("Beams:LHEF = pp_jpsi_jpsi_upsilon.lhe")
+> pythia.readString("443:onMode = 0")  # 关闭默认衰变
+> pythia.readString("443:onIfMatch = 13 -13")  # 强制J/ψ → μμ
+> pythia.init()
+> for i in range(10):
+>     if not pythia.next():
+>         print(f"Error in event {i}: {pythia.info.errorMessage()}")
+> ```
+>
+> #### **（2）使用Valgrind检测内存错误**
+> 运行CMSSW进程时附加内存检查工具：  
+> ```bash
+> valgrind --tool=memcheck --leak-check=full cmsRun GEN2RECO_2023C_0.py
+> ```
+>
+> #### **（3）提交最小复现案例**
+> 若问题仍未解决，建议向CMSSW或Pythia团队提交包含以下内容的最小复现案例：  
+> - 简化的LHE文件（仅包含2个J/ψ + 1个Υ）。  
+> - 精简的CMSSW配置文件。  
+> - Pythia详细日志和崩溃堆栈跟踪。
+>
+> ---
+>
+> ### **4. 总结**
+> 问题根源可能是 **多J/ψ粒子的母子关系管理不当** 或 **并发处理导致的内存索引冲突**。通过修正LHE状态码、调整Pythia参数、强制单线程运行，应能解决大部分问题。若仍需进一步支持，请提供以下信息：  
+> 1. 多J/ψ事件的LHE文件片段（脱敏后）。  
+> 2. 启用Verbosity后的Pythia日志。  
+> 3. Valgrind或GDB的输出结果。
+>
+>
+> 如何手动检查J/ψ（PID=443）和Υ（PID=553）的 状态码？
+>
+> （由于技术原因，联网搜索暂不可用）
+>
+> ---
+>
+> ### **手动检查LHE文件中J/ψ（PID=443）和Υ（PID=553）状态码的方法**
+>
+> 以下是分步指南，帮助您快速定位LHE文件中粒子的状态码：
+>
+> ---
+>
+> #### **1. 直接查看LHE文件内容**
+> LHE文件是XML格式的文本文件，每个事件中的粒子信息通过`<particle>`标签列出。具体步骤：  
+> 1. **打开LHE文件**：  
+>    ```bash
+>    nano pp_sps_1000_10.lhe  # 使用任意文本编辑器（如nano、vim、VSCode等）
+>    ```
+> 2. **定位事件块**：  
+>    搜索`<event>`标签，查看事件中的粒子列表。例如：  
+>    ```xml
+>    <event>
+>      <particle pdgid="2212" ... status="-1" />  <!-- 初始质子 -->
+>      <particle pdgid="2212" ... status="-1" />
+>      <particle pdgid="443" ... status="2" />    <!-- J/ψ（中间粒子） -->
+>      <particle pdgid="553" ... status="2" />    <!-- Υ（中间粒子） -->
+>      <particle pdgid="13" ... status="1" />     <!-- μ子（末态粒子） -->
+>      <particle pdgid="-13" ... status="1" />
+>    </event>
+>    ```
+> 3. **检查目标粒子的`status`属性**：  
+>    对于PID=443（J/ψ）和553（Υ），确认其`status`值是否为`2`（中间粒子）。
+>
+> ---
+>
+> #### **2. 使用命令行工具快速筛选**
+> 在Linux终端中，使用`grep`命令提取包含目标PID的行及其状态码：  
+> ```bash
+> # 查找J/ψ（PID=443）的状态码
+> grep -E '<particle.*pdgid="443".*status="([0-9-]+)"' pp_sps_1000_10.lhe
+> 
+> # 查找Υ（PID=553）的状态码
+> grep -E '<particle.*pdgid="553".*status="([0-9-]+)"' pp_sps_1000_10.lhe
+> ```
+> **输出示例**：  
+> ```xml
+> <particle pdgid="443" ... status="2" />
+> <particle pdgid="553" ... status="2" />
+> ```
+>
+> ---
+>
+> #### **3. 编写Python脚本自动解析**
+> 以下脚本可批量提取所有事件中J/ψ和Υ的状态码：  
+> ```python
+> import re
+> 
+> def check_particle_status(lhe_file, target_pids):
+>     with open(lhe_file, 'r') as f:
+>         content = f.read()
+>     
+>     # 匹配所有事件块
+>     events = re.findall(r'<event>.*?</event>', content, re.DOTALL)
+>     
+>     for event_idx, event in enumerate(events, 1):
+>         # 匹配所有粒子行
+>         particles = re.findall(r'<particle.*?pdgid
+> ```
+>
+> 请为我检查这个LHE文件片段：
+>
+> ```
+> <LesHouchesEvents version="1.0">
+> <!--
+> File generated with HELAC-ONIA
+> -->
+> <init>
+>     2212    2212  6.800000E+03  6.800000E+03       0       0   10000   10000       3       1
+>     2.7662080351E+01    2.5337522149E-01    1.0000000000E+00    89
+> </init>
+> <event>
+>     12    89  2.230813E-01  3.117787E+00  7.299270E-03  1.180000E-01
+>       21   -1    0    0  101  103  0.0000000000E+00  0.0000000000E+00  4.6199574514E-03  4.6199574514E-03  0.0000000000E+00  0.000000E+00  9.0000E+00
+>       21   -1    0    0  103  102  0.0000000000E+00  0.0000000000E+00 -7.8334029110E+02  7.8334029110E+02  0.0000000000E+00  0.000000E+00  9.0000E+00
+>       21   -1    0    0  104  106  0.0000000000E+00  0.0000000000E+00  1.7928543551E+01  1.7928543551E+01  0.0000000000E+00  0.000000E+00  9.0000E+00
+>       21   -1    0    0  106  105  0.0000000000E+00  0.0000000000E+00 -1.4255696338E+00  1.4255696338E+00  0.0000000000E+00  0.000000E+00  9.0000E+00
+>       21   -1    0    0  107  109  0.0000000000E+00  0.0000000000E+00  5.7964683702E+00  5.7964683702E+00  0.0000000000E+00  0.000000E+00  9.0000E+00
+>       21   -1    0    0  109  108  0.0000000000E+00  0.0000000000E+00 -3.3375461537E+01  3.3375461537E+01  0.0000000000E+00  0.000000E+00  9.0000E+00
+>      443    1    1    2    0    0  1.0501487877E-01  3.5263268580E-01 -5.4250928147E+02  5.4251824031E+02  3.0960000000E+00  0.000000E+00  9.0000E+00
+>       21    1    1    2  101  102 -1.0501487877E-01 -3.5263268580E-01 -2.4082638967E+02  2.4082667074E+02  0.0000000000E+00  0.000000E+00  9.0000E+00
+>      443    1    3    4    0    0 -1.2640140999E+00  2.9675955077E+00  2.7971889936E+00  5.2738825364E+00  3.0960000000E+00  0.000000E+00  9.0000E+00
+>       21    1    3    4  104  105  1.2640140999E+00 -2.9675955077E+00  1.3705784923E+01  1.4080230648E+01  0.0000000000E+00  0.000000E+00  9.0000E+00
+>      553    1    5    6    0    0 -5.3164998534E+00 -8.6947425265E+00 -5.6859121219E+00  1.5023002065E+01  9.4603000000E+00  0.000000E+00  9.0000E+00
+>       21    1    5    6  107  108  5.3164998534E+00  8.6947425265E+00 -2.1893081045E+01  2.4148927843E+01  0.0000000000E+00  0.000000E+00  9.0000E+00
+> </event>
+> ```
+>
+> （由于技术原因，联网搜索暂不可用）
+>
+> ### **检查结果**
+>
+> 在提供的LHE文件片段中，所有 **J/ψ（PID=443）** 和 **Υ（PID=553）** 的 **状态码（status）** 均为 **1**（末态粒子）。这与Pythia处理衰变的要求不符，需将其修正为 **2**（中间粒子）。以下是具体分析：
+>
+> ---
+>
+> ### **1. J/ψ（PID=443）的状态码**
+> 在事件中，两个J/ψ粒子的状态码均为 `1`：  
+> ```xml
+> <!-- 第一个J/ψ（PID=443） -->
+> <particle pdgid="443" status="1" ... />  
+> <!-- 第二个J/ψ（PID=443） -->
+> <particle pdgid="443" status="1" ... />  
+> ```
+> **问题**：  
+> 状态码 `1` 表示该粒子是末态粒子，Pythia不会对其进一步衰变。若希望Pythia处理J/ψ的衰变（如J/ψ → μμ），需将其状态码设为 `2`（中间粒子）。
+>
+> ---
+>
+> ### **2. Υ（PID=553）的状态码**
+> Υ粒子的状态码同样为 `1`：  
+> ```xml
+> <!-- Υ（PID=553） -->
+> <particle pdgid="553" status="1" ... />  
+> ```
+> **问题**：  
+> 状态码 `1` 导致Υ粒子被视为末态粒子，Pythia不会触发其衰变（如Υ → μμ或Υ → e⁺e⁻）。
+>
+> ---
+>
+> ### **3. 修正方法**
+> 将J/ψ和Υ的 **状态码从 `1` 改为 `2`**：  
+> ```xml
+> <!-- 修正后的J/ψ -->
+> <particle pdgid="443" status="2" ... />  
+> <!-- 修正后的Υ -->
+> <particle pdgid="553" status="2" ... />  
+> ```
+>
+> ---
+>
+> ### **4. 验证修正后的LHE文件**
+> 使用以下命令检查修正后的文件：  
+> ```bash
+> # 检查J/ψ状态码
+> grep -E '443\s+2' pp_sps_1000_10.lhe
+> 
+> # 检查Υ状态码
+> grep -E '553\s+2' pp_sps_1000_10.lhe
+> ```
+> **预期输出**：  
+> 应显示所有J/ψ和Υ的 `status=2` 行。
+>
+> ---
+>
+> ### **5. 对Pythia配置的影响**
+> 修正后，需确保Pythia配置中启用了对应粒子的衰变通道。例如：  
+> ```python
+> # 强制J/ψ衰变为μμ
+> process.generator.PythiaParameters.processParameters.extend([
+>     "443:onMode = 0",              # 关闭默认衰变
+>     "443:onIfMatch = 13 -13",      # 允许J/ψ → μ+μ-
+>     "553:onMode = 0",              # 关闭Υ默认衰变
+>     "553:onIfMatch = 13 -13",      # 允许Υ → μ+μ-
+> ])
+> ```
+>
+> ---
+>
+> ### **总结**
+> - **问题根源**：J/ψ和Υ的状态码错误标记为 `1`（末态粒子）。  
+> - **解决方案**：将状态码修正为 `2`（中间粒子），并确保Pythia配置正确衰变通道。  
+> - **验证工具**：使用 `grep` 或 `lhe_analyzer` 脚本检查修正后的文件。
+>
+> 但是之前我成功处理了J/psi+Y的事例文件，它的状态码似乎也不太对劲，以下是事例片段：
+>
+> ```
+> <LesHouchesEvents version="1.0">
+> <!--
+> File generated with HELAC-ONIA
+> -->
+> <init>
+>     2212    2212  6.500000E+03  6.500000E+03       0       0   10000   10000       3       1
+>     1.0763596098E+01    2.8162585519E-02    1.0000000000E+00    82
+> </init>
+> <event>
+>      4    85  1.335434E-02  6.466006E+00  7.299270E-03  2.014622E-01
+>       21   -1    0    0  101  102  0.0000000000E+00  0.0000000000E+00  6.1296551553E-02  6.1296551553E-02  0.0000000000E+00  0.000000E+00  9.0000E+00
+>       21   -1    0    0  102  101  0.0000000000E+00  0.0000000000E+00 -9.2308274447E+02  9.2308274447E+02  0.0000000000E+00  0.000000E+00  9.0000E+00
+>      443    1    1    2    0    0 -1.3452065228E+00  2.0887531108E-02 -5.1360662722E+02  5.1361772599E+02  3.0969200000E+00  0.000000E+00  9.0000E+00
+>      553    1    1    2    0    0  1.3452065228E+00 -2.0887531108E-02 -4.0941482070E+02  4.0952631503E+02  9.4603000000E+00  0.000000E+00  9.0000E+00
+> </event>
+> ```
+>
+> （由于技术原因，联网搜索暂不可用）
+>
+> ### **检查结果与解释**
+>
+> 在您提供的 **J/ψ+Υ成功事例** 的LHE文件片段中，**J/ψ（PID=443）和Υ（PID=553）的状态码均为 `1`**（末态粒子）。这与您之前遇到的错误配置看似矛盾，但实际可能由以下原因解释：
+>
+> ---
+>
+> ### **1. LHE文件与Pythia配置的交互逻辑**
+> - **关键点**：  
+>   **状态码（status）仅决定LHE文件中粒子的“角色”**，而Pythia是否处理衰变还取决于其自身的配置。  
+>   - 若Pythia配置中**强制指定了某粒子的衰变通道**（如`443:onMode=0` + `443:onIfMatch=13 -13`），即使该粒子在LHE文件中标记为末态（status=1），Pythia仍会尝试对其执行衰变。  
+>   - 此时，Pythia会忽略LHE文件中的状态码，直接应用用户定义的衰变规则。
+>
+> - **您的成功案例解析**：  
+>   在J/ψ+Υ事例中，可能**Pythia配置中强制指定了J/ψ和Υ的衰变**，导致即使状态码为 `1`，Pythia仍强行触发衰变。  
+>   **示例配置**：  
+>   ```python
+>   process.generator.PythiaParameters.processParameters = cms.vstring(
+>       "443:onMode = 0",          # 关闭J/ψ默认衰变
+>       "443:onIfMatch = 13 -13",  # 强制J/ψ→μμ
+>       "553:onMode = 0",          # 关闭Υ默认衰变
+>       "553:onIfMatch = 13 -13",  # 强制Υ→μμ
+>   )
+>   ```
+>
+> ---
+>
+> ### **2. 多粒子场景中的差异**
+> - **J/ψ+Υ事例**：  
+>   单J/ψ和单Υ的组合可能未触发Pythia的内部索引冲突，即使状态码错误，仍能通过强制衰变生成合法事件。  
+>
+> - **J/ψ+J/ψ+Υ事例**：  
+>   多个J/ψ的强制衰变可能导致母子关系混乱（如多个J/ψ的衰变产物索引重叠），最终引发 `vector::_M_range_check` 错误。
+>
+> ---
+>
+> ### **3. 解决方案**
+> #### **（1）统一修正状态码（推荐）**
+> 将**所有需要衰变的粒子（J/ψ、Υ）的状态码设为 `2`**，以符合LHE规范，避免依赖Pythia的强制覆盖：  
+> ```xml
+> <!-- 修正后的J/ψ+Υ事例 -->
+> <event>
+>   ...
+>   <particle pdgid="443" status="2" ... />  <!-- J/ψ标记为中间粒子 -->
+>   <particle pdgid="553" status="2" ... />  <!-- Υ标记为中间粒子 -->
+> </event>
+> ```
+>
+> #### **（2）调整Pythia配置**
+> 若需保留状态码为 `1`，需在Pythia中**显式启用对末态粒子的衰变处理**：  
+> ```python
+> process.generator.PythiaParameters.processParameters = cms.vstring(
+>     "ParticleDecays:limitTau0 = on",        # 允许衰变长寿命粒子
+>     "ParticleDecays:tau0Max = 10",          # 设置最大寿命阈值（单位：mm）
+>     "443:mayDecay = on",                    # 允许J/ψ衰变（即使status=1）
+>     "553:mayDecay = on",                    # 允许Υ衰变（即使status=1）
+>     "443:onMode = 0",                       # 关闭默认衰变
+>     "443:onIfMatch = 13 -13",               # J/ψ→μμ
+>     "553:onMode = 0",                       # 关闭默认衰变
+>     "553:onIfMatch = 13 -13",               # Υ→μμ
+> )
+> ```
+>
+> ---
+>
+> ### **4. 验证步骤**
+> 1. **检查成功案例的完整配置**：  
+>    确认在J/ψ+Υ事例中是否启用了 `mayDecay` 或强制衰变参数。  
+> 2. **对比多粒子场景的Pythia日志**：  
+>    在J/ψ+J/ψ+Υ事例中启用详细日志，观察Pythia是否尝试对status=1的粒子执行衰变：  
+>    ```python
+>    process.generator.pythiaHepMCVerbosity = cms.untracked.bool(True)
+>    process.generator.pythiaPylistVerbosity = cms.untracked.int32(4)
+>    ```
+>
+> ---
+>
+> ### **总结**
+> - **成功原因**：Pythia配置中的强制衰变设置覆盖了LHE文件中的状态码错误。  
+> - **失败原因**：多J/ψ场景放大了索引冲突问题，导致越界访问。  
+> - **推荐操作**：统一将J/ψ和Υ的状态码设为 `2`，并确保Pythia配置与LHE文件一致。
+
+
+
+有两个耐人寻味的地方，一个是状态码设置，一个是索引冲突。这个倒是蛮有趣的想法。
+
+尤其有趣的地方是，我们确实在pythia运行日志里面找到了这个：
+
+```
+PYTHIA Warning in Pythia::check: energy-momentum not quite conserved
+PYTHIA Error in Pythia::check: mismatch in daughter and mother lists
+PYTHIA Error in Pythia::next: check of event revealed problems
+```
+
+这个mismatch很可能是症结所在
+
+值得尝试：双J/psi
+
+## 27 Mar. 2025
+
+前面几周被MC的问题卡得厉害。后来在CMS Talk发帖。
+
+David d'Enterria追问生成事例的方式，并且建议用Event Mixing的办法试一试。但是单纯的Event Mixing给出一样的报错...
+
+> 插曲：之前先后用过`pp_NOnia_MPS`和`pp_psiX_CrystalBall`两个addon，一度担心过会不会有不一致。经测试（写了一个Jupyter Notebook），在产生单$J/\psi$和单$\Upsilon$时，分布是几乎一致的。
+
+Steve Mrenna回复表示pythia没有办法处理包含超过两个子散射过程的过程，而且说明了这个就是被硬编码在pythia里面的特性。
+
+基于这个回复，设计了这样一个`squash incoming gluon`机制：
+
+* 将初始胶子的四位能动量加和，然后重新分配成一对胶子。
+* 末态中本来带有颜色的粒子被配对处理，若有未配对的粒子就和初始胶子挂在一起。
+
+这样可以正常通过pythia的颜色和动量校验，并且末态和物理实际也很接近。
+
+#### Event Mixing的问题
+
+过程中也尝试过使用Event Mixing的办法组合一些$J/\psi+J/\psi+\Upsilon$ sample，然后合并胶子，但是后来做的单$J/\psi$和单$\Upsilon$的MC sample太多了，最要命的是HELAC-Onia直接产生的这些夸克偶素几乎是按照$p_z$排序的，所以混合以前必须进行一些打乱。
+
+而事例数量一多，内存就没办法整体读进来打乱，然后就要用流式处理之类的计算技巧降低负荷。这里面的门道可就多了...中间想到了一些“分块分流”的办法，但是代码实现非常糟心。
+
+代码也不是完全白写：`squash incoming gluon`机制很好用，可以直接把混合比设成“1”，然后把HELAC-Onia直接产生的TPS数据扔给MultiMixer，然后把多余的入射胶子合并。这样就能得到前面的结果了。
+
+#### MC的一些结果
+
+共产生93274个事例，经过$|\eta|<3$的筛选得到大约13k个事例，经过完整的模拟一直到Ntuple共计64个entries，220个candidates。
+
+在仅仅加入质量窗的时候：
+
+![MC_from_93274_evts_mass_J_raw](images/MC_from_93274_evts_mass_J_raw.png)
+
+如果加入对$\mu^{\pm}$的基础cut和$J/\psi$ $p_T > 2\space  \mathrm{GeV/c}$，得到结果如下：
+
+![MC_from_93274_evts_mass_J_cut](images/MC_from_93274_evts_mass_J_cut.png)
+
+（好像还是应该再积累一些sample...在跑了在跑了[苦涩]）
+
+#### $J/\psi+J/\psi+\phi$ Data的更新
+
+还没有区分non-prompt和prompt尝试进行了多维拟合：
+
+![JpsiJpsiPhi_3D_Fit_erf_bkg](images/JpsiJpsiPhi_3D_Fit_erf_bkg.PNG)
+
+| $J/\psi^{[1]}$ | $J/\psi^{[2]}$ | $\phi$     | Fitted yield | yield stat. unc. |
+| -------------- | -------------- | ---------- | ------------ | ---------------- |
+| **Signal**     | **Signal**     | **Signal** | **114**      | **30**           |
+| Background     | Signal         | Signal     | 47           | 18               |
+| Signal         | Background     | Signal     | 64           | 27               |
+| Signal         | Signal         | Background | 3590         | 200              |
+| Background     | Background     | Signal     | 39           | 18               |
+| Background     | Signal         | Background | 708          | 63               |
+| Signal         | Background     | Background | 1950         | 200              |
+| Background     | Background     | Background | 931          | 62               |
+| -              | -              | -          | 7448         | -                |
+
+和Stefanos Leontsinis在Run 2的结果进行对比：
+
+![JpsiJpsiPhi_Run2_Stefanos_yield](images/JpsiJpsiPhi_Run2_Stefanos_yield.png)
+
+各个成分的占比关系定性近似相同，整体本底比例略高。
