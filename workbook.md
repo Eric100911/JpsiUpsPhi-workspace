@@ -1002,7 +1002,7 @@ PYTHIA Error in Pythia::next: check of event revealed problems
 
 David d'Enterria追问生成事例的方式，并且建议用Event Mixing的办法试一试。但是单纯的Event Mixing给出一样的报错...
 
-> 插曲：之前先后用过`pp_NOnia_MPS`和`pp_psiX_CrystalBall`两个addon，一度担心过会不会有不一致。经测试（写了一个Jupyter Notebook），在产生单$J/\psi$和单$\Upsilon$时，分布是几乎一致的。
+> 插曲：之前先后用过`pp_NOnia_MPS`和`pp_psiX_CrystalBall`两个addon，一度担心过会不会有不一致。经测试（写了一个`Jupyter Notebook`），在产生单$J/\psi$和单$\Upsilon$时，分布是几乎一致的。
 
 Steve Mrenna回复表示pythia没有办法处理包含超过两个子散射过程的过程，而且说明了这个就是被硬编码在pythia里面的特性。
 
@@ -1019,7 +1019,33 @@ Steve Mrenna回复表示pythia没有办法处理包含超过两个子散射过�
 
 而事例数量一多，内存就没办法整体读进来打乱，然后就要用流式处理之类的计算技巧降低负荷。这里面的门道可就多了...中间想到了一些“分块分流”的办法，但是代码实现非常糟心。
 
-代码也不是完全白写：`squash incoming gluon`机制很好用，可以直接把混合比设成“1”，然后把HELAC-Onia直接产生的TPS数据扔给MultiMixer，然后把多余的入射胶子合并。这样就能得到前面的结果了。
+> 代码也不是完全白写：`squash incoming gluon`机制很好用，可以直接把混合比设成“1”，然后把HELAC-Onia直接产生的TPS数据扔给MultiMixer，然后把多余的入射胶子合并。这样就能得到后面的结果了。
+
+另外一个问题：我们的Event Mixing产生的结果和直接模拟TPS的结果一致性如何？
+
+这里重新展示single-$J/\psi$和single-$\Upsilon$使用`pp_NOnia_MPS`和`pp_psiX_CrystalBall`两个addon生成的动力学分布：
+
+![single_Jpsi_eta_compare_NOnia_psiX_with_Error](images/single_Jpsi_eta_compare_NOnia_psiX_with_Error.png)
+
+![single_Jpsi_pT_compare_NOnia_psiX_with_Error](images/single_Jpsi_pT_compare_NOnia_psiX_with_Error.png)
+
+![single_Y_eta_compare_NOnia_psiX_with_Error](images/single_Y_eta_compare_NOnia_psiX_with_Error.png)
+
+![single_Y_pT_compare_NOnia_psiX_with_Error](images/single_Y_pT_compare_NOnia_psiX_with_Error.png)
+
+然后可以比较直接产生TPS得到的一些动力学量分布：
+
+![compareMix_Jpsi_eta_with_Error](images/compareMix_Jpsi_eta_with_Error.png)
+
+![compareMix_Jpsi_pT_with_Error](images/compareMix_Jpsi_pT_with_Error.png)
+
+![compareMix_Y_eta_with_Error](images/compareMix_Y_eta_with_Error.png)
+
+![compareMix_Y_pT_with_Error](images/compareMix_Y_pT_with_Error.png)
+
+仅仅看了单粒子动力学。在进行适当的reweight之前，可能还是应该先使用直接生成的TPS sample。
+
+> 更别提我自己写的那个Mixer还很不好用...
 
 #### MC的一些结果
 
@@ -1035,9 +1061,9 @@ Steve Mrenna回复表示pythia没有办法处理包含超过两个子散射过�
 
 （好像还是应该再积累一些sample...在跑了在跑了[苦涩]）
 
-#### $J/\psi+J/\psi+\phi$ Data的更新
+#### $J/\psi+J/\psi+\phi$ Data的更新（cr. 程幸）
 
-还没有区分non-prompt和prompt尝试进行了多维拟合：
+没有区分non-prompt和prompt，使用全部Run 3尝试进行了多维拟合：
 
 ![JpsiJpsiPhi_3D_Fit_erf_bkg](images/JpsiJpsiPhi_3D_Fit_erf_bkg.PNG)
 
@@ -1052,6 +1078,8 @@ Steve Mrenna回复表示pythia没有办法处理包含超过两个子散射过�
 | Signal         | Background     | Background | 1950         | 200              |
 | Background     | Background     | Background | 931          | 62               |
 | -              | -              | -          | 7448         | -                |
+
+显著度可达约$4\sigma$
 
 和Stefanos Leontsinis在Run 2的结果进行对比：
 
