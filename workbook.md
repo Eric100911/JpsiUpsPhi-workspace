@@ -505,7 +505,7 @@ preCut/jobs_$(suffix)/%/runPreCut.C: preCut/runPreCut.C config/datalist.txt preC
 
 CMS Induction Event里面Phat Srimanobhas提到过这样一个问题：我们从GEN一直到RECO放在同一个python文件做可能出bug。
 
-经过分布运行排查，我们把问题定位到GEN这一步，并且暂时排除了GEN一直到RECO使用同个配置文件的直接风险，但是之后就几无进展。
+经过分布运行排查，我们把问题定位到GEN-SIM这一步，并且暂时排除了GEN一直到RECO使用同个配置文件的直接风险，但是之后就几无进展。
 
 ## 6 Mar. 2024
 
@@ -513,26 +513,26 @@ CMS Induction Event里面Phat Srimanobhas提到过这样一个问题：我们从
 
 <img src="images/JpsiJpsiUps_result_3.png" alt="SecFilter_nonOverlap" style="zoom:50%;" />
 
-### 筛选条件：
+筛选条件：
 
-#### "Default" cut for $J/\psi$
+##### "Default" cut for $J/\psi$
 
 * $p_{T} > 6\mathrm{GeV/c}$
 
 * $|\eta| < 2.5$
 
-#### "Default" cut for $\mu^{\pm}$ 
+##### "Default" cut for $\mu^{\pm}$ 
 
 * For $|\eta| < 1.2$, require $p_T > 2.5 \mathrm{GeV/c}$
 * For $1.2 < |\eta| < 2.5$, require $p_T > 3.5 \mathrm{GeV/c}$
 * Muon ID: soft
 
-#### Vertices
+##### Vertices
 
 * For quarkonia decay vertices, require at least 1%
 * For triple quarkonia vertex, require a "valid" fit.
 
-#### Attempted cut for $\Upsilon$
+##### Attempted cut for $\Upsilon$
 
 * $p_T > 2\space \mathrm{GeV/c}$
 * $|\eta| < 2.5$
