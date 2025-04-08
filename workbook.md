@@ -1009,7 +1009,7 @@ Steve Mrenna回复表示pythia没有办法处理包含超过两个子散射过�
 基于这个回复，设计了这样一个`squash incoming gluon`机制：
 
 * 将初始胶子的四位能动量加和，然后重新分配成一对胶子。
-* 末态中本来带有颜色的粒子被配对处理，若有未配对的粒子就和初始胶子挂在一起。
+* 末态中本来带有颜色的粒子被配对处理，若有未配对的粒子就和初始胶子挂在一起，形成一个三粒子颜色流顶点
 
 这样可以正常通过pythia的颜色和动量校验，并且末态和物理实际也很接近。
 
@@ -1063,7 +1063,7 @@ Steve Mrenna回复表示pythia没有办法处理包含超过两个子散射过�
 
 #### $J/\psi+J/\psi+\phi$ Data的更新（cr. 程幸）
 
-没有区分non-prompt和prompt，使用全部Run 3尝试进行了多维拟合：
+没有区分non-prompt和prompt，使用Run 3 2022-2024 尝试进行了多维拟合：
 
 ![JpsiJpsiPhi_3D_Fit_erf_bkg](images/JpsiJpsiPhi_3D_Fit_erf_bkg.PNG)
 
