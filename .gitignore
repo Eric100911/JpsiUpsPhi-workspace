@@ -1,4 +1,4 @@
-workbook.png
+workbook*.png
 preCut/*.png
 secCut/*.png
 preCut/jobs_*/*
@@ -7,3 +7,4 @@ secCut/jobs_*/*
 *.root
 *.pdf
 TPS-Onia2MuMu/*
+*.DS_Store
