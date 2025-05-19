@@ -76,16 +76,20 @@ $J/\psi+J/\psi+\Upsilon(1S)$ pLHE to MINIAOD workflow.
 
 #### Dataset Name:
 
-In general, we would adopt the name **`JpsiJpsiY1S_TPS_to_6Mu_13p6TeV_HELAC_Onia2_TuneCP5_pythia8`**
+In general, we would adopt the name 
+
+**`QCD-TPS-JPsiJPsiUpsilon1Sto6Mu_TuneCP5_13p6TeV_helaconia2-pythia8`**
+
+> Previously **`JpsiJpsiY1S_TPS_to_6Mu_13p6TeV_HELAC_Onia2_TuneCP5_pythia8`**, changed to meet the suggestions in Ref.[^17] .
 
 We shall start with Run2022C settings and make MC datasets with the following names:
 
 | Data tier   | full name                                                    |
 | ----------- | ------------------------------------------------------------ |
-| GEN-SIM     | `/JpsiJpsiY1S_TPS_to_6Mu_13p6TeV_HELAC_Onia2_TuneCP5_pythia8/Run3Summer22_124X_mcRun3_2022_realistic_v12_MiniAOD_v4/GENSIM` |
-| GEN-SIM-RAW | `/JpsiJpsiY1S_TPS_to_6Mu_13p6TeV_HELAC_Onia2_TuneCP5_pythia8/Run3Summer22_124X_mcRun3_2022_realistic_v12_MiniAOD_v4/RAW` |
-| AODSIM      | `/JpsiJpsiY1S_TPS_to_6Mu_13p6TeV_HELAC_Onia2_TuneCP5_pythia8/Run3Summer22_124X_mcRun3_2022_realistic_v12_MiniAOD_v4/AOD` |
-| MINIAODSIM  | `/JpsiJpsiY1S_TPS_to_6Mu_13p6TeV_HELAC_Onia2_TuneCP5_pythia8/Run3Summer22_124X_mcRun3_2022_realistic_v12_MiniAOD_v4/MINIAOD` |
+| GEN-SIM     | `/QCD-TPS-JPsiJPsiUpsilon1Sto6Mu_TuneCP5_13p6TeV_helaconia2-pythia8/Run3Summer22_124X_mcRun3_2022_realistic_v12_MiniAOD_v4/GENSIM` |
+| GEN-SIM-RAW | `/QCD-TPS-JPsiJPsiUpsilon1Sto6Mu_TuneCP5_13p6TeV_helaconia2-pythia8/Run3Summer22_124X_mcRun3_2022_realistic_v12_MiniAOD_v4/RAW` |
+| AODSIM      | `/QCD-TPS-JPsiJPsiUpsilon1Sto6Mu_TuneCP5_13p6TeV_helaconia2-pythia8/Run3Summer22_124X_mcRun3_2022_realistic_v12_MiniAOD_v4/AOD` |
+| MINIAODSIM  | `/QCD-TPS-JPsiJPsiUpsilon1Sto6Mu_TuneCP5_13p6TeV_helaconia2-pythia8/Run3Summer22_124X_mcRun3_2022_realistic_v12_MiniAOD_v4/MINIAOD` |
 
 #### CMSSW Config from `cmsDriver.py`
 
@@ -317,7 +321,7 @@ cmsDriver.py \
 
 On `CRAB`, running CMSSW config with pLHE input could mean a bit more trouble, especially when we have A LOT of pLHE to process and we are adding PU into consideration.
 
-The first issue is that pLHE could become too large to be transferred to the `CRAB` input sandbox for later processing. In our case, it was \~ 900k events split into \~ 9k files with a total size of \~ 1.8GB, far exceeding the 100MB limit of `CRAB`[^9]. This demands that we do not include pLHE files as inputs in CRAB config, but rather, handle the pLHE file at where they are directly accessible.
+The first issue is that pLHE could become too large to be transferred to the `CRAB` input sandbox for later processing. In our case, it is \~ 900k events split into \~ 9k files with a total size of \~ 1.8GB, far exceeding the 100MB limit of `CRAB`[^9]. This demands that we do not include pLHE files as inputs in CRAB config, but rather, handle the pLHE file at where they are directly accessible.
 
 For the `GEN-SIM ` step, we are setting the input file source with the PFN to our CERNBox, adding all files into the list of files to be processed, and leaving the job splitting to CRAB. The produced data files will be mostly kept at `T2_CN_Beijing` .
 
@@ -327,13 +331,52 @@ For the `GEN-SIM ` step, we are setting the input file source with the PFN to ou
 > config.General.instance = 'preprod'
 > ```
 >
-> 
+> Yet from recent tests, we actually found that this declaration was not needed. See this testing dataset at `DAS` query:
+>
+> ```bash
+> file dataset=/JpsiJpsiY1S_TPS_to_6Mu_13p6TeV_HELAC_Onia2_TuneCP5_pythia8/chiw-crab3_JJY1S_TPS_6Mu_13p6TeV_TuneCP5_pythia8_Run3Summer22_GENSIM-b97cb38d4172304bce7c88d7a279c79c/USER
+> ```
+>
+> The size of the files do differ, indicating that the splitting was indeed done strictly.
+>
+> Short summary: just go ahead with the LHE files!
 
-For the `GEN-SIM ` and `DIGI-L1T-HLT` steps, we prefer conducting them only at `T2_CH_CERN`. For the former one, since the LHE files are at `T3_CH_CERNBOX`, running the tasks at `T2_CH_CERN` seems the safest way to do it. For the latter one, it is because `T2_CH_CERN` has an abundant supply of `PREMIX` files 
+For the `GEN-SIM ` and `DIGI-L1T-HLT` steps, we prefer conducting them only at `T2_CH_CERN`. For the former one, since the LHE files are at `T3_CH_CERNBOX`, running the tasks at `T2_CH_CERN` seems the safest way to do it. For the latter one, it is because `T2_CH_CERN` has an abundant supply of `PREMIX` files and we would like to avoid frequently transferring the pileup samples.[^9]
 
 
 
+### 18 May. 2025
 
+Unluckily, I ran into some trouble when I was testing the `CRAB` config. Some excess data was produced and I have to invalidate them via `crab setfilestatus` .
+
+### 19 May. 2025
+
+Looks like all those intermidiary files can only be manually removed.
+
+Previously, we have generated `/JpsiJpsiY1S_TPS_to_6Mu_13p6TeV_HELAC_Onia2_TuneCP5_pythia8/chiw-crab3_JJY1S_TPS_6Mu_13p6TeV_TuneCP5_pythia8_Run3Summer22_GENSIM-b97cb38d4172304bce7c88d7a279c79c/USER`, which was only a short test. To remove it, well...
+
+```bash
+crab setfilestatus --dataset=/JpsiJpsiY1S_TPS_to_6Mu_13p6TeV_HELAC_Onia2_TuneCP5_pythia8/chiw-crab3_JJY1S_TPS_6Mu_13p6TeV_TuneCP5_pythia8_Run3Summer22_GENSIM-b97cb38d4172304bce7c88d7a279c79c/USER --status=INVALID
+crab setdatasetstatus --dataset=/JpsiJpsiY1S_TPS_to_6Mu_13p6TeV_HELAC_Onia2_TuneCP5_pythia8/chiw-crab3_JJY1S_TPS_6Mu_13p6TeV_TuneCP5_pythia8_Run3Summer22_GENSIM-b97cb38d4172304bce7c88d7a279c79c/USER --status=INVALID
+```
+
+The first command sets all those files as invalid. The second one sets the dataset itself as invalid. What remains to be done is removing all existing files via `xrdfs` .
+
+The first thing to do will be retrieving the LFN of all dataset files. 
+
+```bash
+dasgoclient --query="file status=INVALID dataset=/JpsiJpsiY1S_TPS_to_6Mu_13p6TeV_HELAC_Onia2_TuneCP5_pythia8/chiw-crab3_JJY1S_TPS_6Mu_13p6TeV_TuneCP5_pythia8_Run3Summer22_GENSIM-b97cb38d4172304bce7c88d7a279c79c/USER instance=prod/phys03" > tmp_GS_to_rm.txt
+```
+
+> Took me a while to figure out the right command to use! The `instance=prod/phys03` parameter is taken from Ref. [^19]. Apparently I was not the first one to be puzzled with this... The `status=INVALID` command is there to avoid mistakenly removing some other data files.
+
+Check the `tmp_GS_to_rm` with your favourite editor or just `less`, and then proceed to remove with `xrdfs` command:
+
+```bash
+cat tmp_GS_to_rm.txt | xargs -I {} xrdfs xrootd-cms.infn.it rm "{}"
+```
+
+> The "`xrootd-cms.infn.it`" specification is picked since I am working at Beijing. The workbook[^20] suggests using `cmsxrootd.fnal.gov` for accessing from the US and `cms-xrd-global.cern.ch` as the "global redirector".
 
 
 
@@ -364,3 +407,11 @@ For the `GEN-SIM ` and `DIGI-L1T-HLT` steps, we prefer conducting them only at `
 [^13]: A CMS Talk post which might be useful for configuring "sequential MC production". https://cms-talk.web.cern.ch/t/crab-not-accepting-input-dataset-from-fnal-lpc-storage-site/18135
 [^14]: Notes on using `root://` PFN paths in CMSSW config for input files. https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookXrootdService
 [^15]: Notes on splitting pLHE inputs with CRAB jobs: https://cms-talk.web.cern.ch/t/every-crab-job-runs-with-the-same-input-event/2489/9
+[^16]: A test run to check the crab config file.  https://cmsweb.cern.ch/crabserver/ui/task/250518_073925%3Achiw_crab_crab3_JJY1S_TPS_6Mu_13p6TeV_TuneCP5_pythia8_Run3Summer22_GENSIM-pre02
+[^17]: Naming convention for MC datasets. https://cms-pdmv.gitbook.io/project/mccontact/rules-for-dataset-names
+[^ 18]: Invalidating unwanted yet published files: https://twiki.cern.ch/twiki/bin/view/CMSPublic/Crab3DataHandling#Changing_a_dataset_or_file_statu
+[^19]: On retrieving private MC file list via DAS CLI: https://cms-talk.web.cern.ch/t/problems-to-query-files-of-a-dataset-with-dasgoclient/38302
+[^20]: On choosing the redirector of `xrootd` service: https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookXrootdService#ReDirector
+
+
+
